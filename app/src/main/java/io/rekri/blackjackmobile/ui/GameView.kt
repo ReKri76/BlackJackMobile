@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import api.Status
 import card.Card
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import card.Suit
 import card.Value
 
@@ -29,10 +32,12 @@ fun MainWidget(modifier: Modifier = Modifier, viewModel: GameViewModel = viewMod
             onConfirm = { initialStack -> viewModel.addStack(initialStack) }
         )
         Status.STOP -> StartRoundDialog(
-            onConfirm = {bet -> viewModel.startGame(bet)}
+            maxBet = state.stack,
+            onConfirm = { bet -> viewModel.startGame(bet) }
         )
         Status.ERROR-> EndOfRoundDialog(text= "ERROR") { viewModel.stopGame() }
-        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(text = "LOSE") { viewModel.stopGame()}
+        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(text = "LOSE")
+            { viewModel.stopGame()}
         Status.DEALER_IS_TOO_MUCH, Status.PLAYER_BLACKJACK, Status.WIN ->
             EndOfRoundDialog(text = "WIN") { viewModel.stopGame()}
         Status.PUSH->EndOfRoundDialog(text = "PUSH") { viewModel.stopGame()}
@@ -81,28 +86,43 @@ fun EndOfRoundDialog(text: String, onClick: () -> Unit){
 }
 
 @Composable
-fun StartRoundDialog(onConfirm: (Double) -> Unit) {
-    var inputValue by remember { mutableStateOf("10") }
+fun StartRoundDialog(maxBet: Double, onConfirm: (Double) -> Unit) {
+    var betAmount by remember { mutableStateOf(10.0) }
 
     AlertDialog(
         onDismissRequest = {},
         title = { Text(text = "Place your bet", fontWeight = FontWeight.Bold) },
         text = {
-            OutlinedTextField(
-                value = inputValue,
-                onValueChange = { if (it.all { char -> char.isDigit() }) inputValue = it },
-                label = { Text("Bet amount") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+            ) {
+                IconButton(
+                    onClick = { if (betAmount >= 20) betAmount -= 10 },
+                    enabled = betAmount >= 20
+                ) {
+                    Icon(Icons.Default.Remove, contentDescription = "Decrease")
+                }
+
+                Text(
+                    text = "$${betAmount.toInt()}",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                IconButton(
+                    onClick = { if (betAmount + 10 <= maxBet) betAmount += 10 },
+                    enabled = betAmount + 10 <= maxBet
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Increase")
+                }
+            }
         },
         confirmButton = {
             Button(
-                onClick = {
-                    val data = inputValue.toDoubleOrNull() ?: 0.0
-                    onConfirm(data)
-                },
-                enabled = inputValue.isNotBlank()
+                onClick = { onConfirm(betAmount) }
             ) {
                 Text("Deal")
             }
@@ -243,12 +263,14 @@ fun DeckComponent(size: Int) {
         modifier = Modifier
             .size(50.dp, 70.dp)
             .background(Color(0xFFB71C1C), RoundedCornerShape(4.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.5f), RoundedCornerShape(4.dp)),
+            .border(1.dp, Color.White.copy(alpha = 0.5f),
+                RoundedCornerShape(4.dp)),
         contentAlignment = Alignment.Center
     ){
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text("DECK", color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
-            Text(text = size.toString(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(text = size.toString(), color = Color.White, fontWeight = FontWeight.Bold,
+                fontSize = 16.sp)
         }
     }
 }
@@ -258,13 +280,15 @@ fun StackComponent(stack: Double, bet: Double) {
     Surface(
         color = Color.Black.copy(alpha = 0.4f),
         shape = RoundedCornerShape(8.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Yellow.copy(alpha = 0.5f))
+        border = androidx.compose.foundation
+            .BorderStroke(1.dp, Color.Yellow.copy(alpha = 0.5f))
     ) {
         Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.End) {
-            Text(text = "CHIPS: $${stack.toInt()}", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            if (bet > 0) {
-                Text(text = "BET: $${bet.toInt()}", color = Color.Yellow, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-            }
+            Text(text = "CHIPS: $${stack.toInt()}",
+                color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            if (bet > 0)
+                Text(text = "BET: $${bet.toInt()}", color = Color.Yellow,
+                    fontSize = 12.sp, fontWeight = FontWeight.Medium)
         }
     }
 }
@@ -354,21 +378,24 @@ fun ActionsButtons(
     ){
         val btnModifier = Modifier.weight(1f)
         
-        GameButton("HIT", onHit, btnModifier, ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)))
-        GameButton("STAND", onStand, btnModifier, ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828)))
-        
-        if (onDouble.isEnabled) {
-            GameButton("X2", onDouble, btnModifier, ButtonDefaults.outlinedButtonColors())
-        }
-        if (onSurrender.isEnabled) {
-            GameButton("FOLD", onSurrender, btnModifier, ButtonDefaults.outlinedButtonColors())
-        }
+        GameButton("HIT", onHit, btnModifier,
+            ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)))
+        GameButton("STAND", onStand, btnModifier,
+            ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828)))
+
+        GameButton("X2", onDouble, btnModifier,
+            ButtonDefaults.buttonColors(containerColor = Color(0, 187, 255)))
+
+        GameButton("FOLD", onSurrender, btnModifier,
+            ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)))
     }
 }
 
 @Composable
-fun GameButton(text: String, state: ButtonState, modifier: Modifier, colors: ButtonColors = ButtonDefaults.buttonColors()) {
-    if (state.isEnabled) {
+fun GameButton(text: String, state: ButtonState,
+               modifier: Modifier, colors: ButtonColors = ButtonDefaults.buttonColors()) {
+
+    if (state.isEnabled)
         Button(
             onClick = state.onClick,
             modifier = modifier.height(48.dp),
@@ -378,5 +405,5 @@ fun GameButton(text: String, state: ButtonState, modifier: Modifier, colors: But
         ) {
             Text(text = text, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
-    }
+
 }
