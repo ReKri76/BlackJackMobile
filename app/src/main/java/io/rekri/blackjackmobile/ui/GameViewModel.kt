@@ -21,23 +21,49 @@ class GameViewModel : ViewModel() {
         val stack : Double,
         val sizeOfDeck : Int?,
         val isInsuranceOffered : Boolean,
-        val isSplitAvailable: Boolean
+        val isSplitAvailable: Boolean,
+        val currentBet : Double
     )
 
-    private val _uiState = MutableStateFlow<UiState?>(null)
-    val uiState: StateFlow<UiState?> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(
+        UiState(
+            dealerHand = emptyList(),
+            playerHand = emptyList(),
+            status = Status.START,
+            stack = 0.0,
+            sizeOfDeck = 0,
+            isInsuranceOffered = false,
+            isSplitAvailable = false,
+            currentBet = 0.0
+        )
+    )
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    fun addStack(bet : Double){
-        stack+=bet
+    fun stopGame() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                currentBet = 0.0,
+                status = Status.STOP
+            )
+        }
+    }
+
+    fun addStack(amount: Double) {
+        stack += amount
+
+        _uiState.update { currentState ->
+            currentState.copy(
+                stack = stack,
+                status = Status.STOP
+            )
+        }
     }
 
     fun startGame(bet: Double){
         if (stack < bet || bet<=0) {
-            _uiState.update { currentState -> currentState?.copy(status = Status.ERROR)}
+            _uiState.update { currentState -> currentState.copy(status = Status.ERROR)}
             return
         }
-
-        stack-=bet
 
         val response = engine.newGame(bet)
 
@@ -109,7 +135,8 @@ class GameViewModel : ViewModel() {
             stack,
             response.deckSize,
             response.insuranceIsOffered,
-            isSplitAvailable
+            isSplitAvailable,
+            currentBet
         )
     }
 }
