@@ -40,6 +40,7 @@ class GameViewModel : ViewModel() {
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     fun stopGame() {
+        currentBet = 0.0
         _uiState.update { currentState ->
             currentState.copy(
                 currentBet = 0.0,
@@ -65,16 +66,17 @@ class GameViewModel : ViewModel() {
             return
         }
 
+        stack -= bet
+        currentBet = bet
+
         val response = engine.newGame(bet)
 
         response.win?.let {
-            stack+=it
-            currentBet=0.0
+            stack += it
+            currentBet = 0.0
         }
 
         update(response)
-
-        currentBet=bet
     }
 
     fun hit(){
@@ -89,12 +91,17 @@ class GameViewModel : ViewModel() {
     }
 
     fun double(){
+        if (stack < currentBet) return
+
+        stack -= currentBet
+        currentBet *= 2
+
         val response = engine.doubleBet()
 
-        stack-=currentBet
-        currentBet*=2
-        stack+=response.win!!
-        currentBet=0.0
+        response.win?.let {
+            stack += it
+            currentBet = 0.0
+        }
 
         update(response)
     }
@@ -102,8 +109,10 @@ class GameViewModel : ViewModel() {
     fun stand(){
         val response = engine.stand()
 
-        stack+=response.win!!
-        currentBet=0.0
+        response.win?.let {
+            stack += it
+            currentBet = 0.0
+        }
 
         update(response)
     }
@@ -117,8 +126,10 @@ class GameViewModel : ViewModel() {
             return
         }
 
-        stack+=response.win!!
-        currentBet=0.0
+        response.win?.let {
+            stack += it
+            currentBet = 0.0
+        }
 
         update(response)
     }

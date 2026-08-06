@@ -14,6 +14,13 @@ pluginManagement {
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
+
+def localProperties = new Properties()
+def localPropertiesFile = new File(settingsDir, "local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -22,8 +29,8 @@ dependencyResolutionManagement {
         maven {
             url = uri("https://maven.pkg.github.com/ReKri76/BlackJackEngine")
             credentials {
-                username = 'RekRi76'
-                password = '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'
+                username = localProperties.getProperty("gpr.user") ?: System.getenv("GPR_USER")
+                password = localProperties.getProperty("gpr.key") ?: System.getenv("GPR_KEY")
             }
         }
     }
