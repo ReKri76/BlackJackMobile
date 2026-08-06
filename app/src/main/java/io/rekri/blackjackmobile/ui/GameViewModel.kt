@@ -66,7 +66,6 @@ class GameViewModel : ViewModel() {
             return
         }
 
-        stack -= bet
         currentBet = bet
 
         val response = engine.newGame(bet)
@@ -132,6 +131,18 @@ class GameViewModel : ViewModel() {
         }
 
         update(response)
+    }
+
+    fun insurance(){
+        val response = engine.makeInsurance()
+
+        currentBet*=1.5
+
+        update(response)
+    }
+
+    fun skipInsurance() {
+        _uiState.update { it.copy(isInsuranceOffered = false) }
     }
 
     private fun update(response : API.Response){

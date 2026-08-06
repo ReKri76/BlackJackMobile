@@ -45,6 +45,12 @@ fun MainWidget(modifier: Modifier = Modifier, viewModel: GameViewModel = viewMod
         else -> {}
     }
 
+    if (state.isInsuranceOffered)
+        InsuranceOffered(
+            onConfirm = { viewModel.insurance() },
+            onDismiss = { viewModel.skipInsurance() }
+        )
+
     Table(
         stack = state.stack,
         bet = state.currentBet,
@@ -68,6 +74,25 @@ fun MainWidget(modifier: Modifier = Modifier, viewModel: GameViewModel = viewMod
             onClick = { viewModel.double() }
         ),
         modifier = modifier
+    )
+}
+
+@Composable
+fun InsuranceOffered(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Insurance?", fontWeight = FontWeight.Bold) },
+        text = { Text("Dealer has an Ace. Would you like to take insurance for half your bet?") },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Yes")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("No")
+            }
+        }
     )
 }
 
