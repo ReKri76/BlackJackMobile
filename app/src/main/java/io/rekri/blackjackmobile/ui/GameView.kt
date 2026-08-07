@@ -1,6 +1,7 @@
 package io.rekri.blackjackmobile.ui
 
 import androidx.compose.foundation.background
+import io.rekri.blackjackmobile.R
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import api.Status
@@ -25,6 +27,9 @@ import card.Card
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import card.Suit
 import card.Value
 import kotlinx.coroutines.delay
@@ -299,18 +304,68 @@ fun Label(text: String) {
 
 @Composable
 fun DeckComponent(size: Int) {
+    val cardWidth = 60.dp
+    val cardHeight = 85.dp
+    val shape = RoundedCornerShape(5.dp)
+    val maxOffset = 6.dp
+
     Box(
         modifier = Modifier
-            .size(50.dp, 70.dp)
-            .background(Color(0xFFB71C1C), RoundedCornerShape(4.dp))
-            .border(1.dp, Color.White.copy(alpha = 0.5f),
-                RoundedCornerShape(4.dp)),
-        contentAlignment = Alignment.Center
-    ){
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("DECK", color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
-            Text(text = size.toString(), color = Color.White, fontWeight = FontWeight.Bold,
-                fontSize = 16.sp)
+            .size(cardWidth + maxOffset, cardHeight + maxOffset),
+        contentAlignment = Alignment.TopStart
+    ) {
+        for (i in 2 downTo 0) {
+            val offset = (i * 3).dp
+            Surface(
+                modifier = Modifier
+                    .offset(x = offset, y = offset)
+                    .size(cardWidth, cardHeight),
+                shape = shape,
+                shadowElevation = if (i == 0) 4.dp else 2.dp,
+                color = Color.Transparent
+            ) {
+                Box {
+                    Image(
+                        painter = painterResource(id = R.drawable.card_back),
+                        contentDescription = if (i == 0) "Deck Back" else null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .border(1.dp, Color.White.copy(alpha = 0.5f), shape)
+                    )
+
+                    if (i == 0) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .background(
+                                    color = Color.Black.copy(alpha = 0.6f),
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "DECK",
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    fontSize = 9.5.sp,
+                                    letterSpacing = 1.sp
+                                )
+                                Text(
+                                    text = size.toString(),
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
