@@ -5,27 +5,21 @@ plugins {
 
 android {
     namespace 'io.rekri.blackjackmobile'
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk 36
 
     defaultConfig {
         applicationId "io.rekri.blackjackmobile"
         minSdk 28
         targetSdk 36
         versionCode 1
-        versionName "0.1.0-BETA"
+        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            optimization {
-                enable false
-            }
+            minifyEnabled false
         }
     }
     compileOptions {
@@ -41,13 +35,16 @@ dependencies {
     implementation platform(libs.androidx.compose.bom)
     implementation libs.androidx.activity.compose
     implementation libs.androidx.compose.material3
-    implementation libs.androidx.compose.material.icons.core
-    implementation libs.androidx.compose.material.icons.extended
     implementation libs.androidx.compose.ui
     implementation libs.androidx.compose.ui.graphics
     implementation libs.androidx.compose.ui.tooling.preview
     implementation libs.androidx.core.ktx
     implementation libs.androidx.lifecycle.runtime.ktx
+
+    implementation 'com.github.ReKri76:BlackJackEngine:v1.0.0'
+    implementation 'androidx.compose.material:material-icons-extended:1.7.8'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7'
+
     testImplementation libs.junit
     androidTestImplementation platform(libs.androidx.compose.bom)
     androidTestImplementation libs.androidx.compose.ui.test.junit4
@@ -55,6 +52,4 @@ dependencies {
     androidTestImplementation libs.androidx.junit
     debugImplementation libs.androidx.compose.ui.test.manifest
     debugImplementation libs.androidx.compose.ui.tooling
-    implementation 'io.rekri:blackjack-engine:2.5.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7'
 }
