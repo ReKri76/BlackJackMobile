@@ -15,6 +15,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import api.Status
 import card.Card
 import androidx.compose.material.icons.Icons
@@ -22,6 +27,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import card.Suit
 import card.Value
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun MainWidget(modifier: Modifier = Modifier, viewModel: GameViewModel = viewModel()) {
@@ -42,7 +49,7 @@ fun MainWidget(modifier: Modifier = Modifier, viewModel: GameViewModel = viewMod
             EndOfRoundDialog(text = "WIN") { viewModel.stopGame()}
         Status.PUSH->EndOfRoundDialog(text = "PUSH") { viewModel.stopGame()}
         Status.CONTINUE -> {}
-        else -> {}
+        Status.WAITING -> {}
     }
 
     if (state.isInsuranceOffered)
@@ -98,6 +105,14 @@ fun InsuranceOffered(onConfirm: () -> Unit, onDismiss: () -> Unit) {
 
 @Composable
 fun EndOfRoundDialog(text: String, onClick: () -> Unit){
+    var isVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(1000.milliseconds)
+        isVisible = true
+    }
+
+    if (isVisible)
     AlertDialog(
         onDismissRequest = {},
         title = { Text(text = "Round Finished", fontWeight = FontWeight.Bold) },
@@ -198,7 +213,7 @@ fun Table(
     modifier: Modifier = Modifier) {
 
     Scaffold(
-        containerColor = Color(0xFF1B5E20), // Casino Green
+        containerColor = Color(0xFF1B5E20),
         modifier = modifier
     ) { innerPadding ->
         Column(
@@ -320,21 +335,29 @@ fun StackComponent(stack: Double, bet: Double) {
 
 @Composable
 fun HandDisplay(cards: List<Card>?) {
-    Row(
-        modifier = Modifier.height(110.dp).fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
+    if (cards.isNullOrEmpty()) return
+
+    LazyRow(
+        modifier = Modifier
+            .height(110.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy((-30).dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val displayCards = cards
-        if (displayCards != null) {
-            for (index in 0 until displayCards.size) {
-                val card = displayCards.get(index)
-                Box(
-                    modifier = Modifier
-                        .offset(x = if (index > 0) (-30 * index).dp else 0.dp)
-                ) {
-                    BlackjackCard(card)
-                }
+        items(
+            items = cards,
+            key = { card -> card.uuid }
+        ) { card ->
+            Box(
+                modifier = Modifier.animateItem(
+                    fadeInSpec = tween(400),
+                    placementSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+            ) {
+                BlackjackCard(card)
             }
         }
     }
@@ -404,15 +427,19 @@ fun ActionsButtons(
         val btnModifier = Modifier.weight(1f)
         
         GameButton("HIT", onHit, btnModifier,
-            ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)))
+            ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF2E7D32), contentColor = Color.White))
         GameButton("STAND", onStand, btnModifier,
-            ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828)))
+            ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFC62828), contentColor = Color.White))
 
         GameButton("X2", onDouble, btnModifier,
-            ButtonDefaults.buttonColors(containerColor = Color(0, 187, 255)))
+            ButtonDefaults.buttonColors(
+                containerColor = Color(0, 187, 255), contentColor = Color.White))
 
         GameButton("FOLD", onSurrender, btnModifier,
-            ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)))
+            ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF212121), contentColor = Color.White))
     }
 }
 
