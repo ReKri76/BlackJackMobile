@@ -118,16 +118,16 @@ fun EndOfRoundDialog(text: String, onClick: () -> Unit){
     }
 
     if (isVisible)
-    AlertDialog(
-        onDismissRequest = {},
-        title = { Text(text = "Round Finished", fontWeight = FontWeight.Bold) },
-        text = { Text(text= text, fontSize = 18.sp) },
-        confirmButton = {
-            Button(onClick = onClick) {
-                Text("Next Round")
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(text = "Round Finished", fontWeight = FontWeight.Bold) },
+            text = { Text(text = text, fontSize = 18.sp) },
+            confirmButton = {
+                Button(onClick = onClick) {
+                    Text("Next Round")
+                }
             }
-        }
-    )
+        )
 }
 
 @Composable
@@ -141,7 +141,9 @@ fun StartRoundDialog(maxBet: Double, onConfirm: (Double) -> Unit) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
             ) {
                 IconButton(
                     onClick = { if (betAmount >= 20) betAmount -= 10 },
@@ -440,7 +442,9 @@ fun BlackjackCard(card: Card) {
         colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize().padding(4.dp)) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(4.dp)) {
             Text(
                 text = valueStr + suitSymbol,
                 color = suitColor,
