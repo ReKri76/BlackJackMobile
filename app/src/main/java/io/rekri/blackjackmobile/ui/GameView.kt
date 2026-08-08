@@ -1,45 +1,49 @@
 package io.rekri.blackjackmobile.ui
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import io.rekri.blackjackmobile.R
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import api.Status
 import card.Card
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import card.Suit
 import card.Value
+import io.rekri.blackjackmobile.R
+import io.rekri.blackjackmobile.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
-fun MainWidget(modifier: Modifier = Modifier, viewModel: GameViewModel = viewModel()) {
+fun MainWidget(
+    modifier: Modifier = Modifier,
+    viewModel: GameViewModel = viewModel()
+) {
     val state by viewModel.uiState.collectAsState()
 
-    when(state.status){
+    when (state.status) {
         Status.START -> StartGameDialog(
             onConfirm = { initialStack -> viewModel.addStack(initialStack) }
         )
@@ -47,21 +51,19 @@ fun MainWidget(modifier: Modifier = Modifier, viewModel: GameViewModel = viewMod
             maxBet = state.stack,
             onConfirm = { bet -> viewModel.startGame(bet) }
         )
-        Status.ERROR-> EndOfRoundDialog(text= "ERROR") { viewModel.stopGame() }
-        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(text = "LOSE")
-            { viewModel.stopGame()}
-        Status.DEALER_IS_TOO_MUCH, Status.PLAYER_BLACKJACK, Status.WIN ->
-            EndOfRoundDialog(text = "WIN") { viewModel.stopGame()}
-        Status.PUSH->EndOfRoundDialog(text = "PUSH") { viewModel.stopGame()}
-        Status.CONTINUE -> {}
-        Status.WAITING -> {}
+        Status.ERROR -> EndOfRoundDialog(text = "ERROR") { viewModel.stopGame() }
+        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(text = "LOSE") { viewModel.stopGame() }
+        Status.DEALER_IS_TOO_MUCH, Status.PLAYER_BLACKJACK, Status.WIN -> EndOfRoundDialog(text = "WIN") { viewModel.stopGame() }
+        Status.PUSH -> EndOfRoundDialog(text = "PUSH") { viewModel.stopGame() }
+        Status.CONTINUE, Status.WAITING -> {}
     }
 
-    if (state.isInsuranceOffered)
+    if (state.isInsuranceOffered) {
         InsuranceOffered(
             onConfirm = { viewModel.insurance() },
             onDismiss = { viewModel.skipInsurance() }
         )
+    }
 
     Table(
         stack = state.stack,
@@ -78,7 +80,7 @@ fun MainWidget(modifier: Modifier = Modifier, viewModel: GameViewModel = viewMod
             onClick = { viewModel.stand() }
         ),
         onSurrender = ButtonState(
-            isEnabled = state.playerHand.size==2 && state.status == Status.CONTINUE,
+            isEnabled = state.playerHand?.size == 2 && state.status == Status.CONTINUE,
             onClick = { viewModel.surrender() }
         ),
         onDouble = ButtonState(
@@ -90,7 +92,11 @@ fun MainWidget(modifier: Modifier = Modifier, viewModel: GameViewModel = viewMod
 }
 
 @Composable
-fun InsuranceOffered(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+fun InsuranceOffered(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = "Insurance?", fontWeight = FontWeight.Bold) },
@@ -104,20 +110,25 @@ fun InsuranceOffered(onConfirm: () -> Unit, onDismiss: () -> Unit) {
             TextButton(onClick = onDismiss) {
                 Text("No")
             }
-        }
+        },
+        modifier = modifier
     )
 }
 
 @Composable
-fun EndOfRoundDialog(text: String, onClick: () -> Unit){
-    var isVisible by remember { mutableStateOf(false) }
+fun EndOfRoundDialog(
+    text: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    var isVisible by remember(text) { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(text) {
         delay(1000.milliseconds)
         isVisible = true
     }
 
-    if (isVisible)
+    if (isVisible) {
         AlertDialog(
             onDismissRequest = {},
             title = { Text(text = "Round Finished", fontWeight = FontWeight.Bold) },
@@ -126,13 +137,20 @@ fun EndOfRoundDialog(text: String, onClick: () -> Unit){
                 Button(onClick = onClick) {
                     Text("Next Round")
                 }
-            }
+            },
+            modifier = modifier
         )
+    }
 }
 
 @Composable
-fun StartRoundDialog(maxBet: Double, onConfirm: (Double) -> Unit) {
-    var betAmount by remember { mutableStateOf(10.0) }
+fun StartRoundDialog(
+    maxBet: Double,
+    onConfirm: (Double) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val minBet = 10.0
+    var betAmount by remember { mutableStateOf(minBet.coerceAtMost(maxBet)) }
 
     AlertDialog(
         onDismissRequest = {},
@@ -146,8 +164,8 @@ fun StartRoundDialog(maxBet: Double, onConfirm: (Double) -> Unit) {
                     .padding(vertical = 16.dp)
             ) {
                 IconButton(
-                    onClick = { if (betAmount >= 20) betAmount -= 10 },
-                    enabled = betAmount >= 20
+                    onClick = { if (betAmount - 10 >= minBet) betAmount -= 10 },
+                    enabled = betAmount - 10 >= minBet
                 ) {
                     Icon(Icons.Default.Remove, contentDescription = "Decrease")
                 }
@@ -169,16 +187,21 @@ fun StartRoundDialog(maxBet: Double, onConfirm: (Double) -> Unit) {
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(betAmount) }
+                onClick = { onConfirm(betAmount) },
+                enabled = maxBet >= minBet
             ) {
                 Text("Deal")
             }
-        }
+        },
+        modifier = modifier
     )
 }
 
 @Composable
-fun StartGameDialog(onConfirm: (Double) -> Unit) {
+fun StartGameDialog(
+    onConfirm: (Double) -> Unit,
+    modifier: Modifier = Modifier
+) {
     var inputValue by remember { mutableStateOf("1000") }
 
     AlertDialog(
@@ -190,6 +213,7 @@ fun StartGameDialog(onConfirm: (Double) -> Unit) {
                 onValueChange = { if (it.all { char -> char.isDigit() }) inputValue = it },
                 label = { Text("Starting chips") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
         },
@@ -197,30 +221,32 @@ fun StartGameDialog(onConfirm: (Double) -> Unit) {
             Button(
                 onClick = {
                     val data = inputValue.toDoubleOrNull() ?: 0.0
-                    onConfirm(data)
+                    if (data > 0) onConfirm(data)
                 },
-                enabled = inputValue.isNotBlank()
+                enabled = (inputValue.toDoubleOrNull() ?: 0.0) > 0
             ) {
                 Text("Start Game")
             }
-        }
+        },
+        modifier = modifier
     )
 }
 
 @Composable
 fun Table(
-    stack: Double, bet: Double,
-    dealerHand : List<Card>?,
-    sizeOfDeck : Int,
-    playerHand : List<Card>?,
-    onHit : ButtonState,
-    onStand : ButtonState,
-    onSurrender : ButtonState,
-    onDouble : ButtonState,
-    modifier: Modifier = Modifier) {
-
+    stack: Double,
+    bet: Double,
+    dealerHand: List<Card>?,
+    sizeOfDeck: Int,
+    playerHand: List<Card>?,
+    onHit: ButtonState,
+    onStand: ButtonState,
+    onSurrender: ButtonState,
+    onDouble: ButtonState,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
-        containerColor = Color(0xFF1B5E20),
+        containerColor = TableGreen,
         modifier = modifier
     ) { innerPadding ->
         Column(
@@ -232,19 +258,22 @@ fun Table(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             TopPart(stack, bet, dealerHand, sizeOfDeck)
-            
+
             Spacer(modifier = Modifier.weight(1f))
-            
+
             BottomPart(playerHand, onHit, onStand, onSurrender, onDouble)
         }
     }
 }
 
 @Composable
-fun TopPart(stack: Double, bet: Double,
-            dealerHand : List<Card>?,
-            sizeOfDeck : Int,
-            modifier: Modifier = Modifier){
+fun TopPart(
+    stack: Double,
+    bet: Double,
+    dealerHand: List<Card>?,
+    sizeOfDeck: Int,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -257,9 +286,9 @@ fun TopPart(stack: Double, bet: Double,
             DeckComponent(sizeOfDeck)
             StackComponent(stack, bet)
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         Label("DEALER")
         Spacer(modifier = Modifier.height(8.dp))
         HandDisplay(dealerHand)
@@ -267,31 +296,37 @@ fun TopPart(stack: Double, bet: Double,
 }
 
 @Composable
-fun BottomPart(playerHand : List<Card>?,
-               onHit : ButtonState,
-               onStand : ButtonState,
-               onSurrender : ButtonState,
-               onDouble : ButtonState,
-               modifier: Modifier = Modifier){
+fun BottomPart(
+    playerHand: List<Card>?,
+    onHit: ButtonState,
+    onStand: ButtonState,
+    onSurrender: ButtonState,
+    onDouble: ButtonState,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         HandDisplay(playerHand)
         Spacer(modifier = Modifier.height(8.dp))
         Label("PLAYER")
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
-        ActionsButtons(onHit=onHit, onStand=onStand,onSurrender=onSurrender, onDouble=onDouble)
+
+        ActionsButtons(onHit = onHit, onStand = onStand, onSurrender = onSurrender, onDouble = onDouble)
     }
 }
 
 @Composable
-fun Label(text: String) {
+fun Label(
+    text: String,
+    modifier: Modifier = Modifier
+) {
     Surface(
         color = Color.Black.copy(alpha = 0.3f),
-        shape = RoundedCornerShape(4.dp)
+        shape = RoundedCornerShape(4.dp),
+        modifier = modifier
     ) {
         Text(
             text = text,
@@ -305,15 +340,17 @@ fun Label(text: String) {
 }
 
 @Composable
-fun DeckComponent(size: Int) {
+fun DeckComponent(
+    size: Int,
+    modifier: Modifier = Modifier
+) {
     val cardWidth = 60.dp
     val cardHeight = 85.dp
     val shape = RoundedCornerShape(5.dp)
     val maxOffset = 6.dp
 
     Box(
-        modifier = Modifier
-            .size(cardWidth + maxOffset, cardHeight + maxOffset),
+        modifier = modifier.size(cardWidth + maxOffset, cardHeight + maxOffset),
         contentAlignment = Alignment.TopStart
     ) {
         for (i in 2 downTo 0) {
@@ -373,29 +410,45 @@ fun DeckComponent(size: Int) {
 }
 
 @Composable
-fun StackComponent(stack: Double, bet: Double) {
+fun StackComponent(
+    stack: Double,
+    bet: Double,
+    modifier: Modifier = Modifier
+) {
     Surface(
         color = Color.Black.copy(alpha = 0.4f),
         shape = RoundedCornerShape(8.dp),
-        border = androidx.compose.foundation
-            .BorderStroke(1.dp, Color.Yellow.copy(alpha = 0.5f))
+        border = BorderStroke(1.dp, GoldAccent.copy(alpha = 0.5f)),
+        modifier = modifier
     ) {
         Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.End) {
-            Text(text = "CHIPS: $${stack.toInt()}",
-                color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            if (bet > 0)
-                Text(text = "BET: $${bet.toInt()}", color = Color.Yellow,
-                    fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            Text(
+                text = "CHIPS: $${stack.toInt()}",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+            if (bet > 0) {
+                Text(
+                    text = "BET: $${bet.toInt()}",
+                    color = GoldAccent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
 
 @Composable
-fun HandDisplay(cards: List<Card>?) {
+fun HandDisplay(
+    cards: List<Card>?,
+    modifier: Modifier = Modifier
+) {
     if (cards.isNullOrEmpty()) return
 
     LazyRow(
-        modifier = Modifier
+        modifier = modifier
             .height(110.dp)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy((-30).dp, Alignment.CenterHorizontally),
@@ -421,30 +474,35 @@ fun HandDisplay(cards: List<Card>?) {
 }
 
 @Composable
-fun BlackjackCard(card: Card) {
+fun BlackjackCard(
+    card: Card,
+    modifier: Modifier = Modifier
+) {
     val (suitColor, suitSymbol) = when (card.suit) {
-        Suit.HEARTS -> Color(0xFFD32F2F) to "♥"
-        Suit.DIAMONDS -> Color(0xFFD32F2F) to "♦"
-        Suit.SPADES -> Color(0xFF212121) to "♠"
-        Suit.CLUBS -> Color(0xFF212121) to "♣"
+        Suit.HEARTS -> CardRed to "♥"
+        Suit.DIAMONDS -> CardRed to "♦"
+        Suit.SPADES -> CardBlack to "♠"
+        Suit.CLUBS -> CardBlack to "♣"
     }
-    val valueStr = when(card.value){
-        Value.ACE->"A"
-        Value.KING->"K"
-        Value.QUEEN->"Q"
-        Value.JACK->"J"
+    val valueStr = when (card.value) {
+        Value.ACE -> "A"
+        Value.KING -> "K"
+        Value.QUEEN -> "Q"
+        Value.JACK -> "J"
         else -> card.value.value.toString()
     }
 
     ElevatedCard(
-        modifier = Modifier.size(width = 70.dp, height = 100.dp),
+        modifier = modifier.size(width = 70.dp, height = 100.dp),
         shape = RoundedCornerShape(6.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = Color.White),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(4.dp)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(4.dp)
+        ) {
             Text(
                 text = valueStr + suitSymbol,
                 color = suitColor,
@@ -469,52 +527,87 @@ fun BlackjackCard(card: Card) {
     }
 }
 
-data class ButtonState(val isEnabled : Boolean, val onClick : ()->Unit)
+data class ButtonState(val isEnabled: Boolean, val onClick: () -> Unit)
 
 @Composable
 fun ActionsButtons(
-    onHit : ButtonState,
-    onStand : ButtonState,
-    onSurrender : ButtonState,
-    onDouble : ButtonState,
+    onHit: ButtonState,
+    onStand: ButtonState,
+    onSurrender: ButtonState,
+    onDouble: ButtonState,
     modifier: Modifier = Modifier
-){
+) {
     Row(
-        modifier= modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ){
+    ) {
         val btnModifier = Modifier.weight(1f)
-        
-        GameButton("HIT", onHit, btnModifier,
-            ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF2E7D32), contentColor = Color.White))
-        GameButton("STAND", onStand, btnModifier,
-            ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFC62828), contentColor = Color.White))
 
-        GameButton("X2", onDouble, btnModifier,
-            ButtonDefaults.buttonColors(
-                containerColor = Color(0, 187, 255), contentColor = Color.White))
+        if(onHit.isEnabled)
+            GameButton(
+                text = "HIT",
+                state = onHit,
+                modifier = btnModifier,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ActionHit,
+                    contentColor = Color.White
+                )
+            )
 
-        GameButton("FOLD", onSurrender, btnModifier,
-            ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF212121), contentColor = Color.White))
+        if (onStand.isEnabled)
+            GameButton(
+                text = "STAND",
+                state = onStand,
+                modifier = btnModifier,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ActionStand,
+                    contentColor = Color.White
+                )
+            )
+
+        if (onDouble.isEnabled)
+            GameButton(
+                text = "X2",
+                state = onDouble,
+                modifier = btnModifier,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ActionDouble,
+                    contentColor = Color.White
+                )
+            )
+
+        if (onSurrender.isEnabled)
+            GameButton(
+                text = "FOLD",
+                state = onSurrender,
+                modifier = btnModifier,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ActionFold,
+                    contentColor = Color.White
+                )
+            )
     }
 }
 
 @Composable
-fun GameButton(text: String, state: ButtonState,
-               modifier: Modifier, colors: ButtonColors = ButtonDefaults.buttonColors()) {
-
-    if (state.isEnabled)
-        Button(
-            onClick = state.onClick,
-            modifier = modifier.height(48.dp),
-            shape = RoundedCornerShape(8.dp),
-            colors = colors,
-            contentPadding = PaddingValues(0.dp)
-        ) {
-            Text(text = text, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-        }
-
+fun GameButton(
+    text: String,
+    state: ButtonState,
+    modifier: Modifier = Modifier,
+    colors: ButtonColors = ButtonDefaults.buttonColors()
+) {
+    Button(
+        onClick = state.onClick,
+        enabled = state.isEnabled,
+        modifier = modifier.height(48.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = colors,
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
 }
