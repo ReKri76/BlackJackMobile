@@ -109,11 +109,6 @@ class GameViewModel : ViewModel() {
         val response = engine.stand()
 
         _uiState.update { it.copy(status = Status.WAITING) }
-        for (i in 1 until response.state.dealer.size){
-            val newDealerHand = _uiState.value.dealerHand!!.toMutableList()
-            newDealerHand.add(response.state.dealer[i])
-            _uiState.update { it.copy(dealerHand = newDealerHand.toList()) }
-        }
 
         response.win?.let {
             stack += it
