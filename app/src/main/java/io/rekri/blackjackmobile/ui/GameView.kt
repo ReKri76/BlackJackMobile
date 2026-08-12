@@ -53,7 +53,8 @@ fun MainWidget(
         )
         Status.ERROR -> EndOfRoundDialog(text = "ERROR") { viewModel.stopGame() }
         Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(text = "LOSE") { viewModel.stopGame() }
-        Status.DEALER_IS_TOO_MUCH, Status.PLAYER_BLACKJACK, Status.WIN -> EndOfRoundDialog(text = "WIN") { viewModel.stopGame() }
+        Status.DEALER_IS_TOO_MUCH, Status.WIN -> EndOfRoundDialog(text = "WIN") { viewModel.stopGame() }
+        Status.PLAYER_BLACKJACK -> EndOfRoundDialog(text = "BLACKJACK") { viewModel.stopGame() }
         Status.PUSH -> EndOfRoundDialog(text = "PUSH") { viewModel.stopGame() }
         Status.CONTINUE, Status.WAITING -> {}
     }
