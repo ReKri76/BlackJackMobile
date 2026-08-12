@@ -51,11 +51,11 @@ fun MainWidget(
             maxBet = state.stack,
             onConfirm = { bet -> viewModel.startGame(bet) }
         )
-        Status.ERROR -> EndOfRoundDialog(text = "ERROR") { viewModel.stopGame() }
-        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(text = "LOSE") { viewModel.stopGame() }
-        Status.DEALER_IS_TOO_MUCH, Status.WIN -> EndOfRoundDialog(text = "WIN") { viewModel.stopGame() }
-        Status.PLAYER_BLACKJACK -> EndOfRoundDialog(text = "BLACKJACK") { viewModel.stopGame() }
-        Status.PUSH -> EndOfRoundDialog(text = "PUSH") { viewModel.stopGame() }
+        Status.ERROR -> EndOfRoundDialog(text = "ERROR" to null) { viewModel.stopGame() }
+        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(text = "Lose" to ResultLoss) { viewModel.stopGame() }
+        Status.DEALER_IS_TOO_MUCH, Status.WIN -> EndOfRoundDialog(text = "Win" to ResultWin) { viewModel.stopGame() }
+        Status.PLAYER_BLACKJACK -> EndOfRoundDialog(text = "Blackjack!" to ResultBlackjack) { viewModel.stopGame() }
+        Status.PUSH -> EndOfRoundDialog(text = "push" to ResultPush) { viewModel.stopGame() }
         Status.CONTINUE, Status.WAITING -> {}
     }
 
@@ -81,7 +81,7 @@ fun MainWidget(
             onClick = { viewModel.stand() }
         ),
         onSurrender = ButtonState(
-            isEnabled = state.playerHand?.size == 2 && state.status == Status.CONTINUE,
+            isEnabled = state.playerHand.size == 2 && state.status == Status.CONTINUE,
             onClick = { viewModel.surrender() }
         ),
         onDouble = ButtonState(
@@ -104,12 +104,12 @@ fun InsuranceOffered(
         text = { Text("Dealer has an Ace. Would you like to take insurance for half your bet?") },
         confirmButton = {
             Button(onClick = onConfirm) {
-                Text("Yes")
+                Text("Conifurm")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("No")
+                Text("Dismiss")
             }
         },
         modifier = modifier
@@ -118,7 +118,7 @@ fun InsuranceOffered(
 
 @Composable
 fun EndOfRoundDialog(
-    text: String,
+    text: Pair<String, Color?>,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -132,8 +132,8 @@ fun EndOfRoundDialog(
     if (isVisible) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text(text = "Round Finished", fontWeight = FontWeight.Bold) },
-            text = { Text(text = text, fontSize = 18.sp) },
+            title = { Text(text = "Round Finished", fontWeight = FontWeight.Bold, color = text.second?: Color.White) },
+            text = { Text(text = text.first, fontSize = 18.sp, color = text.second?: Color.White) },
             confirmButton = {
                 Button(onClick = onClick) {
                     Text("Next Round")
@@ -150,7 +150,7 @@ fun StartRoundDialog(
     onConfirm: (Double) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val minBet = 10.0
+    val minBet = 1.0
     var betAmount by remember { mutableStateOf(minBet.coerceAtMost(maxBet)) }
 
     AlertDialog(
@@ -165,7 +165,7 @@ fun StartRoundDialog(
                     .padding(vertical = 16.dp)
             ) {
                 IconButton(
-                    onClick = { if (betAmount - 10 >= minBet) betAmount -= 10 },
+                    onClick = { if (betAmount - 1 >= minBet) betAmount -= 1 },
                     enabled = betAmount - 10 >= minBet
                 ) {
                     Icon(Icons.Default.Remove, contentDescription = "Decrease")
@@ -179,7 +179,7 @@ fun StartRoundDialog(
                 )
 
                 IconButton(
-                    onClick = { if (betAmount + 10 <= maxBet) betAmount += 10 },
+                    onClick = { if (betAmount + 1 <= maxBet) betAmount += 1 },
                     enabled = betAmount + 10 <= maxBet
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Increase")
@@ -203,7 +203,7 @@ fun StartGameDialog(
     onConfirm: (Double) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var inputValue by remember { mutableStateOf("1000") }
+    var inputValue by remember { mutableStateOf("100") }
 
     AlertDialog(
         onDismissRequest = {},
