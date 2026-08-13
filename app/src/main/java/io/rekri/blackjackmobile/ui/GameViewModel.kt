@@ -3,7 +3,6 @@ package io.rekri.blackjackmobile.ui
 import API
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import api.Engine
 import api.Status
 import card.Card
@@ -115,7 +114,7 @@ class GameViewModel : ViewModel() {
 
             response = API.Response(
                 Engine.State(
-                    response.state.dealer,
+                    listOf(response.state.dealer[0]),
                     response.state.player,
                     Status.CONTINUE
                 ),
