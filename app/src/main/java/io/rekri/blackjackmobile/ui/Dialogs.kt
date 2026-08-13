@@ -83,28 +83,41 @@ fun SplitOffered(
 @Composable
 fun EndOfRoundDialog(
     text: Pair<String, Color>,
+    isSplit: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    var isVisible by remember(text) { mutableStateOf(false) }
+    if (isSplit) {
+        LaunchedEffect(Unit) {
+            onClick()
+        }
+    } else {
+        var isVisible by remember(text) { mutableStateOf(false) }
 
-    LaunchedEffect(text) {
-        delay(1000.milliseconds)
-        isVisible = true
-    }
+        LaunchedEffect(text) {
+            delay(1000.milliseconds)
+            isVisible = true
+        }
 
-    if (isVisible) {
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text(text = "Round Finished", fontWeight = FontWeight.Bold, color = text.second) },
-            text = { Text(text = text.first, fontSize = 18.sp, color = text.second) },
-            confirmButton = {
-                Button(onClick = onClick) {
-                    Text("Next Round")
-                }
-            },
-            modifier = modifier
-        )
+        if (isVisible) {
+            AlertDialog(
+                onDismissRequest = {},
+                title = {
+                    Text(
+                        text = "Round Finished",
+                        fontWeight = FontWeight.Bold,
+                        color = text.second
+                    )
+                },
+                text = { Text(text = text.first, fontSize = 18.sp, color = text.second) },
+                confirmButton = {
+                    Button(onClick = onClick) {
+                        Text("Next Round")
+                    }
+                },
+                modifier = modifier
+            )
+        }
     }
 }
 

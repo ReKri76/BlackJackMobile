@@ -43,6 +43,8 @@ fun MainWidget(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    val isSplit = state.split!=0
+
     when (state.status) {
         Status.START -> StartGameDialog(
             onConfirm = { initialStack -> viewModel.addStack(initialStack) }
@@ -51,14 +53,14 @@ fun MainWidget(
             maxBet = state.stack,
             onConfirm = { bet -> viewModel.startGame(bet) }
         )
-        Status.ERROR -> EndOfRoundDialog(text = "ERROR" to Color.White) { viewModel.stopGame() }
-        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(text = "Lose" to ResultLoss) {
+        Status.ERROR -> EndOfRoundDialog(text = "ERROR" to Color.White, isSplit) { viewModel.stopGame() }
+        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(text = "Lose" to ResultLoss, isSplit) {
             viewModel.stopGame() }
-        Status.DEALER_IS_TOO_MUCH, Status.WIN -> EndOfRoundDialog(text = "Win" to ResultWin) {
+        Status.DEALER_IS_TOO_MUCH, Status.WIN -> EndOfRoundDialog(text = "Win" to ResultWin, isSplit) {
             viewModel.stopGame() }
-        Status.PLAYER_BLACKJACK -> EndOfRoundDialog(text = "Blackjack!" to ResultBlackjack) {
+        Status.PLAYER_BLACKJACK -> EndOfRoundDialog(text = "Blackjack!" to ResultBlackjack, isSplit) {
             viewModel.stopGame() }
-        Status.PUSH -> EndOfRoundDialog(text = "Push" to ResultPush) { viewModel.stopGame() }
+        Status.PUSH -> EndOfRoundDialog(text = "Push" to ResultPush, isSplit) { viewModel.stopGame() }
         Status.CONTINUE, Status.WAITING -> {}
     }
 

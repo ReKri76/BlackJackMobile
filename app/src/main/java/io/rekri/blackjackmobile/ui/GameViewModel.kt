@@ -188,7 +188,8 @@ class GameViewModel : ViewModel() {
                 )
 
         _uiState.value = UiState(
-            dealerHand = response.state.dealer,
+            dealerHand = if(response.state.status == Status.CONTINUE ||response.state.status == Status.WAITING )
+                listOf(response.state.dealer[0]) else response.state.dealer,
             playerHand = response.state.player,
             status = response.state.status,
             stack = stack,
