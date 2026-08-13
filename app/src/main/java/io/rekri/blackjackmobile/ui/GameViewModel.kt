@@ -4,6 +4,7 @@ import API
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import api.Engine
 import api.Status
 import card.Card
 import kotlinx.coroutines.delay
@@ -107,7 +108,22 @@ class GameViewModel : ViewModel() {
     }
 
     fun hit(){
-        val response = currentEngine.hit()
+        var response = currentEngine.hit()
+
+        if ((splits.isNotEmpty() || stackDelta!=null) &&
+            response.state.status== Status.DEALER_IS_TOO_MUCH) {
+
+            response = API.Response(
+                Engine.State(
+                    response.state.dealer,
+                    response.state.player,
+                    Status.CONTINUE
+                ),
+                response.insuranceIsOffered,
+                null,
+                response.deckSize
+            )
+        }
 
         response.win?.let {
             if (splits.isNotEmpty())
