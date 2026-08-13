@@ -14,6 +14,7 @@ class GameViewModel : ViewModel() {
     private val engine = API()
     private var stack : Double = 0.0
     private var currentBet : Double = 0.0
+    private var stackDelta : Double? = null
 
     data class UiState(
         val dealerHand : List<Card>?,
@@ -53,6 +54,7 @@ class GameViewModel : ViewModel() {
         }
         else {
             currentBet = 0.0
+            stackDelta = null
             _uiState.update { currentState ->
                 currentState.copy(
                     currentBet = 0.0,
@@ -84,8 +86,13 @@ class GameViewModel : ViewModel() {
         val response = currentEngine.newGame(bet)
 
         response.win?.let {
-            stack += it
-            currentBet = 0.0
+            if (splits.isNotEmpty())
+                stackDelta = if (stackDelta!=null) stackDelta!! + it else it
+
+            else {
+                stack += if (stackDelta==null) it else stackDelta!! +it
+                currentBet = 0.0
+            }
         }
 
         update(response)
@@ -95,8 +102,13 @@ class GameViewModel : ViewModel() {
         val response = currentEngine.hit()
 
         response.win?.let {
-            stack+=it
-            currentBet=0.0
+            if (splits.isNotEmpty())
+                stackDelta = if (stackDelta!=null) stackDelta!! + it else it
+
+            else {
+                stack += if (stackDelta==null) it else stackDelta!! +it
+                currentBet = 0.0
+            }
         }
 
         update(response)
@@ -105,14 +117,18 @@ class GameViewModel : ViewModel() {
     fun double(){
         if (stack < currentBet) return
 
-        stack -= currentBet
         currentBet *= 2
 
         val response = currentEngine.doubleBet()
 
         response.win?.let {
-            stack += it
-            currentBet = 0.0
+            if (splits.isNotEmpty())
+                stackDelta = if (stackDelta!=null) stackDelta!! + it else it
+
+            else {
+                stack += if (stackDelta==null) it else stackDelta!! +it
+                currentBet = 0.0
+            }
         }
 
         update(response)
@@ -129,8 +145,13 @@ class GameViewModel : ViewModel() {
         }
 
         response.win?.let {
-            stack += it
-            currentBet = 0.0
+            if (splits.isNotEmpty())
+                stackDelta = if (stackDelta!=null) stackDelta!! + it else it
+
+            else {
+                stack += if (stackDelta==null) it else stackDelta!! +it
+                currentBet = 0.0
+            }
         }
 
         update(response)
@@ -146,8 +167,13 @@ class GameViewModel : ViewModel() {
         }
 
         response.win?.let {
-            stack += it
-            currentBet = 0.0
+            if (splits.isNotEmpty())
+                stackDelta = if (stackDelta!=null) stackDelta!! + it else it
+
+            else {
+                stack += if (stackDelta==null) it else stackDelta!! +it
+                currentBet = 0.0
+            }
         }
 
         update(response)
