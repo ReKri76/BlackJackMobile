@@ -109,6 +109,16 @@ class GameViewModel : ViewModel() {
     fun hit(){
         var response = currentEngine.hit()
 
+        response.win?.let {
+            if (splits.isNotEmpty())
+                stackDelta = if (stackDelta!=null) stackDelta!! + it else it
+
+            else {
+                stack += if (stackDelta==null) it else stackDelta!! +it
+                currentBet = 0.0
+            }
+        }
+
         if ((splits.isNotEmpty() || stackDelta!=null) &&
             response.state.status== Status.DEALER_IS_TOO_MUCH) {
 
@@ -124,16 +134,6 @@ class GameViewModel : ViewModel() {
             )
         }
 
-        response.win?.let {
-            if (splits.isNotEmpty())
-                stackDelta = if (stackDelta!=null) stackDelta!! + it else it
-
-            else {
-                stack += if (stackDelta==null) it else stackDelta!! +it
-                currentBet = 0.0
-            }
-        }
-
         update(response)
     }
 
@@ -142,7 +142,7 @@ class GameViewModel : ViewModel() {
 
         currentBet *= 2
 
-        val response = currentEngine.doubleBet()
+        var response = currentEngine.doubleBet()
 
         response.win?.let {
             if (splits.isNotEmpty())
@@ -154,18 +154,24 @@ class GameViewModel : ViewModel() {
             }
         }
 
+        if (splits.isNotEmpty()){
+            response = API.Response(
+                Engine.State(
+                    listOf(response.state.dealer[0]),
+                    response.state.player,
+                    Status.CONTINUE
+                ),
+                response.insuranceIsOffered,
+                null,
+                response.deckSize
+            )
+        }
+
         update(response)
     }
 
     fun stand(){
-        val response = currentEngine.stand()
-
-        _uiState.update { it.copy(status = Status.WAITING) }
-        for (i in 1 until response.state.dealer.size){
-            val newDealerHand = _uiState.value.dealerHand!!.toMutableList()
-            newDealerHand.add(response.state.dealer[i])
-            _uiState.update { it.copy(dealerHand = newDealerHand.toList()) }
-        }
+        var response = currentEngine.stand()
 
         response.win?.let {
             if (splits.isNotEmpty())
@@ -174,6 +180,28 @@ class GameViewModel : ViewModel() {
             else {
                 stack += if (stackDelta==null) it else stackDelta!! +it
                 currentBet = 0.0
+            }
+        }
+
+        if (splits.isNotEmpty()){
+            response = API.Response(
+                Engine.State(
+                    listOf(response.state.dealer[0]),
+                    response.state.player,
+                    response.state.status
+                ),
+                response.insuranceIsOffered,
+                null,
+                response.deckSize
+            )
+        }
+
+        else {
+            _uiState.update { it.copy(status = Status.WAITING) }
+            for (i in 1 until response.state.dealer.size) {
+                val newDealerHand = _uiState.value.dealerHand!!.toMutableList()
+                newDealerHand.add(response.state.dealer[i])
+                _uiState.update { it.copy(dealerHand = newDealerHand.toList()) }
             }
         }
 
