@@ -65,7 +65,7 @@ fun SplitOffered(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = "Split?", fontWeight = FontWeight.Bold) },
-        text = { Text("You have two identical cards. Would you like to split them??") },
+        text = { Text("You have two identical cards. Would you like to split them?") },
         confirmButton = {
             Button(onClick = onConfirm) {
                 Text("Confirm")

@@ -2,13 +2,18 @@ package io.rekri.blackjackmobile.ui
 
 import API
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import api.Status
 import card.Card
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.Stack
+import kotlin.time.Duration.Companion.milliseconds
 
 class GameViewModel : ViewModel() {
     private val engine = API()
@@ -49,8 +54,11 @@ class GameViewModel : ViewModel() {
     fun stopGame() {
 
         if (splits.isNotEmpty()){
-            currentEngine=splits.pop()
-            update(currentEngine.currentResponse)
+            viewModelScope.launch{
+                delay(400.milliseconds)
+                currentEngine = splits.pop()
+                update(currentEngine.currentResponse)
+            }
         }
         else {
             currentBet = 0.0
