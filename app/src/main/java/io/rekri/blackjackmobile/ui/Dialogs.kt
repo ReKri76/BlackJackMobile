@@ -44,7 +44,31 @@ fun InsuranceOffered(
         text = { Text("Dealer has an Ace. Would you like to take insurance for half your bet?") },
         confirmButton = {
             Button(onClick = onConfirm) {
-                Text("Conifurm")
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Dismiss")
+            }
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun SplitOffered(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Split?", fontWeight = FontWeight.Bold) },
+        text = { Text("You have two identical cards. Would you like to split them??") },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Confirm")
             }
         },
         dismissButton = {
@@ -106,7 +130,7 @@ fun StartRoundDialog(
             ) {
                 IconButton(
                     onClick = { if (betAmount - 1 >= minBet) betAmount -= 1 },
-                    enabled = betAmount - 10 >= minBet
+                    enabled = betAmount - 1 >= minBet
                 ) {
                     Icon(Icons.Default.Remove, contentDescription = "Decrease")
                 }
@@ -120,7 +144,7 @@ fun StartRoundDialog(
 
                 IconButton(
                     onClick = { if (betAmount + 1 <= maxBet) betAmount += 1 },
-                    enabled = betAmount + 10 <= maxBet
+                    enabled = betAmount + 1 <= maxBet
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Increase")
                 }

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import java.util.Stack
 
 class GameViewModel : ViewModel() {
     private val engine = API()
@@ -22,7 +23,8 @@ class GameViewModel : ViewModel() {
         val sizeOfDeck : Int?,
         val isInsuranceOffered : Boolean,
         val isSplitAvailable: Boolean,
-        val currentBet : Double
+        val currentBet : Double,
+        val split : Int
     )
 
     private val _uiState = MutableStateFlow(
@@ -34,18 +36,29 @@ class GameViewModel : ViewModel() {
             sizeOfDeck = 0,
             isInsuranceOffered = false,
             isSplitAvailable = false,
-            currentBet = 0.0
+            currentBet = 0.0,
+            split = 0
         )
     )
+
+    private val splits = Stack<API>()
+    private var currentEngine : API = engine
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     fun stopGame() {
-        currentBet = 0.0
-        _uiState.update { currentState ->
-            currentState.copy(
-                currentBet = 0.0,
-                status = Status.STOP
-            )
+
+        if (splits.isNotEmpty()){
+            currentEngine=splits.pop()
+            update(currentEngine.currentResponse)
+        }
+        else {
+            currentBet = 0.0
+            _uiState.update { currentState ->
+                currentState.copy(
+                    currentBet = 0.0,
+                    status = Status.STOP
+                )
+            }
         }
     }
 
@@ -68,7 +81,7 @@ class GameViewModel : ViewModel() {
 
         currentBet = bet
 
-        val response = engine.newGame(bet)
+        val response = currentEngine.newGame(bet)
 
         response.win?.let {
             stack += it
@@ -79,7 +92,7 @@ class GameViewModel : ViewModel() {
     }
 
     fun hit(){
-        val response = engine.hit()
+        val response = currentEngine.hit()
 
         response.win?.let {
             stack+=it
@@ -95,7 +108,7 @@ class GameViewModel : ViewModel() {
         stack -= currentBet
         currentBet *= 2
 
-        val response = engine.doubleBet()
+        val response = currentEngine.doubleBet()
 
         response.win?.let {
             stack += it
@@ -106,7 +119,7 @@ class GameViewModel : ViewModel() {
     }
 
     fun stand(){
-        val response = engine.stand()
+        val response = currentEngine.stand()
 
         _uiState.update { it.copy(status = Status.WAITING) }
         for (i in 1 until response.state.dealer.size){
@@ -127,7 +140,7 @@ class GameViewModel : ViewModel() {
         var response : API.Response
 
         try {
-            response = engine.surrender()
+            response = currentEngine.surrender()
         } catch (e : IllegalStateException){
             return
         }
@@ -141,7 +154,7 @@ class GameViewModel : ViewModel() {
     }
 
     fun insurance(){
-        val response = engine.makeInsurance()
+        val response = currentEngine.makeInsurance()
 
         currentBet*=1.5
 
@@ -152,20 +165,38 @@ class GameViewModel : ViewModel() {
         _uiState.update { it.copy(isInsuranceOffered = false) }
     }
 
+    fun split(){
+        if (!_uiState.value.isSplitAvailable)
+            return
+
+        val tmpEngine = currentEngine.split()
+
+        splits.push(API(currentEngine))
+        currentEngine = tmpEngine
+
+        update(tmpEngine.currentResponse)
+    }
+
+    fun skipSplit(){
+        _uiState.update { it.copy(isSplitAvailable = false) }
+    }
+
     private fun update(response : API.Response){
 
-        val isSplitAvailable = (response.state.player[0].value.value ==
-                response.state.player[1].value.value)
+        val isSplitAvailable = (response.state.player.size==2
+                && response.state.player[0].value == response.state.player[1].value
+                )
 
         _uiState.value = UiState(
-            response.state.dealer,
-            response.state.player,
-            response.state.status,
-            stack,
-            response.deckSize,
-            response.insuranceIsOffered,
-            isSplitAvailable,
-            currentBet
+            dealerHand = response.state.dealer,
+            playerHand = response.state.player,
+            status = response.state.status,
+            stack = stack,
+            sizeOfDeck = response.deckSize,
+            isInsuranceOffered = response.insuranceIsOffered,
+            isSplitAvailable = isSplitAvailable,
+            currentBet = currentBet,
+            split = splits.size
         )
     }
 }

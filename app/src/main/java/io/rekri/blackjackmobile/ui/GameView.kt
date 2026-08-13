@@ -58,16 +58,21 @@ fun MainWidget(
             viewModel.stopGame() }
         Status.PLAYER_BLACKJACK -> EndOfRoundDialog(text = "Blackjack!" to ResultBlackjack) {
             viewModel.stopGame() }
-        Status.PUSH -> EndOfRoundDialog(text = "push" to ResultPush) { viewModel.stopGame() }
+        Status.PUSH -> EndOfRoundDialog(text = "Push" to ResultPush) { viewModel.stopGame() }
         Status.CONTINUE, Status.WAITING -> {}
     }
 
-    if (state.isInsuranceOffered) {
+    if (state.isInsuranceOffered)
         InsuranceOffered(
             onConfirm = { viewModel.insurance() },
             onDismiss = { viewModel.skipInsurance() }
         )
-    }
+
+    if (state.isSplitAvailable)
+        SplitOffered(
+            onConfirm = {viewModel.split()},
+            onDismiss = {viewModel.skipSplit()}
+        )
 
     Table(
         stack = state.stack,
@@ -75,6 +80,7 @@ fun MainWidget(
         dealerHand = state.dealerHand,
         sizeOfDeck = state.sizeOfDeck ?: 0,
         playerHand = state.playerHand,
+        countOfSplits = state.split,
         onHit = ButtonState(
             isEnabled = state.status == Status.CONTINUE,
             onClick = { viewModel.hit() }
@@ -106,6 +112,7 @@ fun Table(
     onStand: ButtonState,
     onSurrender: ButtonState,
     onDouble: ButtonState,
+    countOfSplits : Int,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -120,7 +127,7 @@ fun Table(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            TopPart(stack, bet, dealerHand, sizeOfDeck)
+            TopPart(stack, bet, dealerHand, sizeOfDeck, countOfSplits)
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -135,6 +142,7 @@ fun TopPart(
     bet: Double,
     dealerHand: List<Card>?,
     sizeOfDeck: Int,
+    countOfSplits : Int,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -147,7 +155,7 @@ fun TopPart(
             verticalAlignment = Alignment.CenterVertically
         ) {
             DeckComponent(sizeOfDeck)
-            StackComponent(stack, bet)
+            StackComponent(stack, bet, countOfSplits)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -276,6 +284,7 @@ fun DeckComponent(
 fun StackComponent(
     stack: Double,
     bet: Double,
+    countOfSplits : Int,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -286,19 +295,26 @@ fun StackComponent(
     ) {
         Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.End) {
             Text(
-                text = "CHIPS: $${stack.toInt()}",
+                text = "CHIPS: $${stack}",
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp
             )
-            if (bet > 0) {
+            if (bet > 0)
                 Text(
-                    text = "BET: $${bet.toInt()}",
+                    text = "BET: $${bet}",
                     color = GoldAccent,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
                 )
-            }
+
+            if (countOfSplits > 0)
+                Text(
+                    text = "SPLITS: ${countOfSplits}",
+                    color = GoldAccent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
         }
     }
 }
