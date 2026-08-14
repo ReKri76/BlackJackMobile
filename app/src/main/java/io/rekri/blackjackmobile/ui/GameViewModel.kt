@@ -55,7 +55,7 @@ class GameViewModel : ViewModel() {
 
         if (splits.isNotEmpty()){
             viewModelScope.launch{
-                delay(400.milliseconds)
+                delay(500.milliseconds)
                 currentEngine = splits.pop()
                 update(currentEngine.currentResponse)
             }
