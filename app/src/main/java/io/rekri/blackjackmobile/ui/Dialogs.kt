@@ -7,11 +7,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -25,10 +30,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -40,8 +46,19 @@ fun InsuranceOffered(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "Insurance?", fontWeight = FontWeight.Bold) },
-        text = { Text("Dealer has an Ace. Would you like to take insurance for half your bet?") },
+        icon = { Icon(Icons.Default.Info, contentDescription = null) },
+        title = {
+            Text(
+                text = "Insurance?",
+                textAlign = TextAlign.Center
+            )
+        },
+        text = {
+            Text(
+                text = "Dealer has an Ace. Would you like to take insurance for half your bet?",
+                textAlign = TextAlign.Center
+            )
+        },
         confirmButton = {
             Button(onClick = onConfirm) {
                 Text("Confirm")
@@ -64,8 +81,19 @@ fun SplitOffered(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "Split?", fontWeight = FontWeight.Bold) },
-        text = { Text("You have two identical cards. Would you like to split them?") },
+        icon = { Icon(Icons.Default.Warning, contentDescription = null) },
+        title = {
+            Text(
+                text = "Split?",
+                textAlign = TextAlign.Center
+            )
+        },
+        text = {
+            Text(
+                text = "You have two identical cards. Would you like to split them?",
+                textAlign = TextAlign.Center
+            )
+        },
         confirmButton = {
             Button(onClick = onConfirm) {
                 Text("Confirm")
@@ -84,6 +112,7 @@ fun SplitOffered(
 fun EndOfRoundDialog(
     text: Pair<String, Color>,
     isSplit: Boolean,
+    icon: ImageVector = Icons.Default.Star,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -102,14 +131,22 @@ fun EndOfRoundDialog(
         if (isVisible) {
             AlertDialog(
                 onDismissRequest = {},
+                icon = { Icon(icon, contentDescription = null, tint = text.second) },
                 title = {
                     Text(
                         text = "Round Finished",
-                        fontWeight = FontWeight.Bold,
-                        color = text.second
+                        color = text.second,
+                        textAlign = TextAlign.Center
                     )
                 },
-                text = { Text(text = text.first, fontSize = 18.sp, color = text.second) },
+                text = {
+                    Text(
+                        text = text.first,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = text.second,
+                        textAlign = TextAlign.Center
+                    )
+                },
                 confirmButton = {
                     Button(onClick = onClick) {
                         Text("Next Round")
@@ -132,7 +169,7 @@ fun StartRoundDialog(
 
     AlertDialog(
         onDismissRequest = {},
-        title = { Text(text = "Place your bet", fontWeight = FontWeight.Bold) },
+        title = { Text(text = "Place your bet") },
         text = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -141,7 +178,7 @@ fun StartRoundDialog(
                     .fillMaxWidth()
                     .padding(vertical = 16.dp)
             ) {
-                IconButton(
+                FilledTonalIconButton(
                     onClick = { if (betAmount - 1 >= minBet) betAmount -= 1 },
                     enabled = betAmount - 1 >= minBet
                 ) {
@@ -150,12 +187,12 @@ fun StartRoundDialog(
 
                 Text(
                     text = "$${betAmount.toInt()}",
-                    fontSize = 32.sp,
+                    style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                IconButton(
+                FilledTonalIconButton(
                     onClick = { if (betAmount + 1 <= maxBet) betAmount += 1 },
                     enabled = betAmount + 1 <= maxBet
                 ) {
@@ -184,7 +221,7 @@ fun StartGameDialog(
 
     AlertDialog(
         onDismissRequest = {},
-        title = { Text(text = "Welcome to Blackjack", fontWeight = FontWeight.Bold) },
+        title = { Text(text = "Welcome to Blackjack") },
         text = {
             OutlinedTextField(
                 value = inputValue,

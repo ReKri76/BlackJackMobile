@@ -14,7 +14,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -53,14 +58,31 @@ fun MainWidget(
             maxBet = state.stack,
             onConfirm = { bet -> viewModel.startGame(bet) }
         )
-        Status.ERROR -> EndOfRoundDialog(text = "ERROR" to Color.White, isSplit) { viewModel.stopGame() }
-        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(text = "Lose" to ResultLoss, isSplit) {
-            viewModel.stopGame() }
-        Status.DEALER_IS_TOO_MUCH, Status.WIN -> EndOfRoundDialog(text = "Win" to ResultWin, isSplit) {
-            viewModel.stopGame() }
-        Status.PLAYER_BLACKJACK -> EndOfRoundDialog(text = "Blackjack!" to ResultBlackjack, isSplit) {
-            viewModel.stopGame() }
-        Status.PUSH -> EndOfRoundDialog(text = "Push" to ResultPush, isSplit) { viewModel.stopGame() }
+        Status.ERROR -> EndOfRoundDialog(
+            text = "ERROR" to MaterialTheme.colorScheme.error,
+            isSplit = isSplit,
+            icon = Icons.Default.Warning
+        ) { viewModel.stopGame() }
+        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(
+            text = "Lose" to ResultLoss,
+            isSplit = isSplit,
+            icon = Icons.Default.Close
+        ) { viewModel.stopGame() }
+        Status.DEALER_IS_TOO_MUCH, Status.WIN -> EndOfRoundDialog(
+            text = "Win" to ResultWin,
+            isSplit = isSplit,
+            icon = Icons.Default.Done
+        ) { viewModel.stopGame() }
+        Status.PLAYER_BLACKJACK -> EndOfRoundDialog(
+            text = "Blackjack!" to ResultBlackjack,
+            isSplit = isSplit,
+            icon = Icons.Default.Star
+        ) { viewModel.stopGame() }
+        Status.PUSH -> EndOfRoundDialog(
+            text = "Push" to ResultPush,
+            isSplit = isSplit,
+            icon = Icons.Default.Info
+        ) { viewModel.stopGame() }
         Status.CONTINUE, Status.WAITING -> {}
     }
 
@@ -205,7 +227,7 @@ fun Label(
             text = text,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             color = Color.White.copy(alpha = 0.8f),
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             letterSpacing = 2.sp
         )
@@ -264,14 +286,15 @@ fun DeckComponent(
                                 Text(
                                     text = "DECK",
                                     color = Color.White.copy(alpha = 0.8f),
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontSize = 9.5.sp,
                                     letterSpacing = 1.sp
                                 )
                                 Text(
                                     text = size.toString(),
                                     color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
@@ -299,14 +322,14 @@ fun StackComponent(
             Text(
                 text = "CHIPS: $${stack}",
                 color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
             if (bet > 0)
                 Text(
                     text = "BET: $${bet}",
                     color = GoldAccent,
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Medium
                 )
 
@@ -314,7 +337,7 @@ fun StackComponent(
                 Text(
                     text = "SPLITS: ${countOfSplits}",
                     color = GoldAccent,
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Medium
                 )
         }
@@ -387,21 +410,21 @@ fun BlackjackCard(
             Text(
                 text = valueStr + suitSymbol,
                 color = suitColor,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
                 modifier = Modifier.align(Alignment.TopStart)
             )
             Text(
                 text = suitSymbol,
                 color = suitColor,
-                fontSize = 32.sp,
+                style = MaterialTheme.typography.displaySmall,
                 modifier = Modifier.align(Alignment.Center)
             )
             Text(
                 text = valueStr + suitSymbol,
                 color = suitColor,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
                 modifier = Modifier.align(Alignment.BottomEnd)
             )
         }
@@ -487,7 +510,7 @@ fun GameButton(
     ) {
         Text(
             text = text,
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold
         )
     }
