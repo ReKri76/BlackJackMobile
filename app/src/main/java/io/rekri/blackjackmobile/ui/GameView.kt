@@ -11,13 +11,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -28,18 +25,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import api.Status
-import card.Card
-import card.Suit
-import card.Value
+import io.rekri.blackjackengine.card.Card
+import io.rekri.blackjackengine.card.Suit
+import io.rekri.blackjackengine.card.Value
+import io.rekri.blackjackengine.engine.Status
 import io.rekri.blackjackmobile.R
 import io.rekri.blackjackmobile.ui.theme.*
-import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun MainWidget(
@@ -63,7 +57,7 @@ fun MainWidget(
             isSplit = isSplit,
             icon = Icons.Default.Warning
         ) { viewModel.stopGame() }
-        Status.LOSE, Status.PLAYER_IS_TOO_MUCH -> EndOfRoundDialog(
+        Status.LOSE, Status.PLAYER_IS_TOO_MUCH, Status.DEALER_BLACKJACK -> EndOfRoundDialog(
             text = "Lose" to ResultLoss,
             isSplit = isSplit,
             icon = Icons.Default.Close

@@ -1,11 +1,11 @@
 package io.rekri.blackjackmobile.ui
 
-import API
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import api.Engine
-import api.Status
-import card.Card
+import io.rekri.blackjackengine.API
+import io.rekri.blackjackengine.card.Card
+import io.rekri.blackjackengine.engine.Engine
+import io.rekri.blackjackengine.engine.Status
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
