@@ -339,7 +339,7 @@ fun RulesDialog(
                     label = "Dealer hole card",
                     options = HideCard.entries,
                     selected = hideCardRules,
-                    optionLabel = { if (it == HideCard.AMERICAN) "American rules" else "European rule" },
+                    optionLabel = { if (it == HideCard.AMERICAN) "American rule" else "European rule" },
                     onSelected = { hideCardRules = it }
                 )
 
