@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -80,7 +81,20 @@ fun MainWidget(
         Status.CONTINUE, Status.WAITING -> {}
     }
 
-    if (state.isInsuranceOffered && !state.isSplitAvailable)
+    var configWindow by remember { mutableStateOf(false) }
+
+    if (configWindow)
+        RulesDialog(
+            config = viewModel.viewConfig(),
+            onConfirm = {
+                viewModel.changeRules(it)
+                configWindow = false
+            },
+            onDismiss = {configWindow = false},
+            modifier = modifier
+        )
+
+    if (state.isInsuranceOffered && !state.isSplitAvailable && state.status == Status.CONTINUE)
         InsuranceOffered(
             onConfirm = { viewModel.insurance() },
             onDismiss = { viewModel.skipInsurance() }
@@ -108,13 +122,15 @@ fun MainWidget(
             onClick = { viewModel.stand() }
         ),
         onSurrender = ButtonState(
-            isEnabled = state.playerHand.size == 2 && state.status == Status.CONTINUE,
+            isEnabled = state.isSurrenderAvailable && state.status == Status.CONTINUE,
             onClick = { viewModel.surrender() }
         ),
         onDouble = ButtonState(
-            isEnabled = state.status == Status.CONTINUE && state.stack >= state.currentBet,
+            isEnabled = state.isDoubleAvailable && state.status == Status.CONTINUE,
             onClick = { viewModel.double() }
         ),
+        isAmericanRules = state.isAmericanRules,
+        openConfigWindow = {configWindow = true},
         modifier = modifier
     )
 }
@@ -131,6 +147,8 @@ fun Table(
     onSurrender: ButtonState,
     onDouble: ButtonState,
     countOfSplits : Int,
+    isAmericanRules: Boolean,
+    openConfigWindow : () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -145,7 +163,8 @@ fun Table(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            TopPart(stack, bet, dealerHand, sizeOfDeck, countOfSplits)
+            TopPart(stack, bet, dealerHand, sizeOfDeck, countOfSplits,
+                isAmericanRules, openConfigWindow)
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -161,6 +180,8 @@ fun TopPart(
     dealerHand: List<Card>?,
     sizeOfDeck: Int,
     countOfSplits : Int,
+    isAmericanRules : Boolean,
+    openConfigWindow : () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -173,6 +194,11 @@ fun TopPart(
             verticalAlignment = Alignment.CenterVertically
         ) {
             DeckComponent(sizeOfDeck)
+
+            IconButton(onClick =  openConfigWindow) {
+                Icon(Icons.Default.Settings, contentDescription = "Rules", tint = Color.White)
+            }
+
             StackComponent(stack, bet, countOfSplits)
         }
 
@@ -180,7 +206,7 @@ fun TopPart(
 
         Label("DEALER")
         Spacer(modifier = Modifier.height(8.dp))
-        HandDisplay(dealerHand)
+        DealerHandDisplay(dealerHand, isAmericanRules)
     }
 }
 
@@ -197,7 +223,7 @@ fun BottomPart(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        HandDisplay(playerHand)
+        PlayerHandDisplay(playerHand)
         Spacer(modifier = Modifier.height(8.dp))
         Label("PLAYER")
 
@@ -339,7 +365,55 @@ fun StackComponent(
 }
 
 @Composable
-fun HandDisplay(
+fun DealerHandDisplay(
+    inputCards: List<Card>?,
+    isAmericanRules: Boolean,
+    modifier: Modifier = Modifier
+) {
+    if (inputCards.isNullOrEmpty()) return
+
+    val cards : List<Card?> = if (inputCards.size==1 && isAmericanRules)
+        listOf(inputCards[0], null)
+    else
+        inputCards
+
+
+    LazyRow(
+        modifier = modifier
+            .height(110.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy((-30).dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        items(
+            items = cards,
+            key = { card -> if (card!=null) card.uuid else "placeholder_id" }
+        ) { card ->
+            Box(
+                modifier = Modifier.animateItem(
+                    fadeInSpec = tween(400),
+                    placementSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+            ) {
+                if (card!=null)
+                    BlackjackCard(card)
+                else
+                    Image(
+                        painter = painterResource(id = R.drawable.card_back),
+                        contentDescription = "Card Back",
+                        contentScale = ContentScale.Crop,
+                        modifier = modifier.size(width = 70.dp, height = 100.dp),
+                    )
+            }
+        }
+    }
+}
+
+@Composable
+fun PlayerHandDisplay(
     cards: List<Card>?,
     modifier: Modifier = Modifier
 ) {
