@@ -191,7 +191,7 @@ class GameViewModel : ViewModel() {
                 Engine.State(
                     listOf(response.state.dealer[0]),
                     response.state.player,
-                    Status.CONTINUE
+                    response.state.status
                 ),
                 response.insuranceIsOffered,
                 null,
@@ -263,6 +263,15 @@ class GameViewModel : ViewModel() {
 
         currentBet *= 1.5
 
+        response.win?.let {
+            if (splits.isNotEmpty())
+                stackDelta = if (stackDelta != null) stackDelta!! + it else it
+            else {
+                stack += if (stackDelta == null) it else stackDelta!! + it
+                currentBet = 0.0
+            }
+        }
+
         update(response)
     }
 
@@ -314,7 +323,7 @@ class GameViewModel : ViewModel() {
     }
 
     private fun isDoubleAvailable(hasActiveHand: Boolean): Boolean {
-        return hasActiveHand && engine.isDoubleAvailable
+        return hasActiveHand && currentEngine.isDoubleAvailable
     }
 
     private fun isAmericanRules(): Boolean {
