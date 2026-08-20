@@ -1,0 +1,10 @@
+Free offline blackjack simulator.
+
+Supports combinations of the following rules:
+1. Number of decks (3–8)
+2. Dealer stands on soft 17 / Dealer stands on hard 17.
+3. Late surrender, early surrender, or no surrender.
+4. DaS – allowed/disallowed.
+5. Hole card: European or American rules.
+6. Blackjack payout: 3:2 or 6:5.
+7. Doubling down: any cards, 10 & 11, or 9, 10 & 11.

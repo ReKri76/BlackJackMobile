@@ -1,0 +1,1 @@
+Free blackjack simulator with customizable rules.
