@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 package io.rekri.blackjackmobile.ui
 
 import androidx.compose.animation.core.Spring

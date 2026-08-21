@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package io.rekri.blackjackengine.engine;
 
 public enum Status {

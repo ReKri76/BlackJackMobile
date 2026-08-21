@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 package io.rekri.blackjackmobile.ui.theme
 
 import androidx.compose.material3.MaterialTheme

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 package io.rekri.blackjackengine;
 
 import io.rekri.blackjackengine.engine.Engine;
