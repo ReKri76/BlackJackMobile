@@ -277,7 +277,8 @@ class GameViewModel : ViewModel() {
     }
 
     fun skipInsurance() {
-        val res = engine.currentResponse
+        val tmpRes = engine.skipInsurance()
+        val res = API.Response(tmpRes.state, false, tmpRes.win, tmpRes.deckSize)
         update(res)
     }
 

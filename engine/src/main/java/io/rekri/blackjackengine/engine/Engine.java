@@ -56,7 +56,8 @@ public class Engine {
 
     @NotNull
     public State end() {
-        revealHideCard();
+        if (!isSplitWas)
+            revealHideCard();
 
         while (config.dealerStand() == DealerStand.SOFT_17 ? softCount(dealerHand) <= 16 : hardCount(dealerHand) <= 16)
             dealerHand.add(deck.draw());

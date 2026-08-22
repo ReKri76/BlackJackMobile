@@ -227,15 +227,17 @@ public class API {
     }
 
     public Response getCurrentResponse(){
-
-        if (engine.isDealerBlackJack()){
+        State state = new State(currentState.dealer(), engine.getCurrentHand(), currentState.status());
+        return new Response(state, insuranceIsOffered, null, engine.getSizeOfDeck());
+    }
+    public Response skipInsurance(){
+        if (engine.isDealerBlackJack() && config.hideCardRules() != HideCard.EUROPEAN){
             currentState = engine.dealerDraw();
             isGameOver = true;
             return new Response(currentState, false, -currentBet - insuranceBet, engine.getSizeOfDeck());
         }
-
-        State state = new State(currentState.dealer(), engine.getCurrentHand(), currentState.status());
-        return new Response(state, insuranceIsOffered, null, engine.getSizeOfDeck());
+        else
+            return new Response(currentState, false, null, engine.getSizeOfDeck());
     }
 
     private void checkNotGameOver() {
