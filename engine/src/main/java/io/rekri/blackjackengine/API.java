@@ -9,7 +9,6 @@ import io.rekri.blackjackengine.engine.config.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-
 public class API {
     private final Engine engine;
     State currentState;
@@ -76,10 +75,11 @@ public class API {
         this.isGameOver = false;
         this.insuranceIsOffered = false;
         this.isSplitWasIngThisRound = false;
+        engine.setIsSplitWas(false);
 
         currentState = engine.getSizeOfDeck() < minSizeOfDeck ? engine.shuffle() : engine.turn();
 
-        if (currentState.status().equals(Status.PLAYER_BLACKJACK)) {
+        if (currentState.status() == Status.PLAYER_BLACKJACK) {
             isGameOver = true;
             return new Response(currentState, false,
                     currentBet * (config.blackJackRules() == BlackJackRules.THREE_TO_TWO ? 1.5 : 1.2),
@@ -188,11 +188,10 @@ public class API {
             throw new IllegalStateException("Split is only available on the initial hand.");
 
         isSplitWasIngThisRound = true;
+        engine.setIsSplitWas(true);
 
         var newEngine = engine.split();
 
-        // engine.split() left this.engine's hand with only the card that stayed behind;
-        // refresh currentState so it doesn't keep reporting the pre-split 2-card hand.
         this.currentState = new State(currentState.dealer(), engine.getCurrentHand(), currentState.status());
 
         var newAPI = new API(newEngine, this.config);
@@ -228,6 +227,13 @@ public class API {
     }
 
     public Response getCurrentResponse(){
+
+        if (engine.isDealerBlackJack()){
+            currentState = engine.dealerDraw();
+            isGameOver = true;
+            return new Response(currentState, false, -currentBet - insuranceBet, engine.getSizeOfDeck());
+        }
+
         State state = new State(currentState.dealer(), engine.getCurrentHand(), currentState.status());
         return new Response(state, insuranceIsOffered, null, engine.getSizeOfDeck());
     }

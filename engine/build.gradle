@@ -1,6 +1,8 @@
 plugins {
     id 'java-library'
 }
+version = '0.1.1'
+group = 'io.rekri'
 java {
     sourceCompatibility JavaVersion.VERSION_21
     targetCompatibility JavaVersion.VERSION_21

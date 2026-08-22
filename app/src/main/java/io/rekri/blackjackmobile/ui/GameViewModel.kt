@@ -277,7 +277,8 @@ class GameViewModel : ViewModel() {
     }
 
     fun skipInsurance() {
-        _uiState.update { it.copy(isInsuranceOffered = false) }
+        val res = engine.currentResponse
+        update(res)
     }
 
     fun split() {

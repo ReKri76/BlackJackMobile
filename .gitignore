@@ -33,3 +33,5 @@ captures/
 .DS_Store
 Thumbs.db
 /app/release/
+
+bugs

@@ -18,6 +18,8 @@ public class Engine {
     @Nullable private Card hideCard;
     @NotNull private final List<@NotNull Card> currentHand = new ArrayList<>();
     @NotNull private final Config config;
+    private boolean isDealerDraw = false;
+    private boolean isSplitWas = false;
 
     public record State(
             @NotNull List<Card> dealer,
@@ -69,8 +71,10 @@ public class Engine {
 
     @NotNull
     public State dealerDraw() {
-        if (dealerHand.get(0).value().getValue() != 11 && dealerHand.get(0).value().getValue() != 10)
+        if (dealerHand.get(0).value().getValue() != 11 && dealerHand.get(0).value().getValue() != 10) {
+            isDealerDraw = true;
             return status(false);
+        }
 
         else if (config.hideCardRules()==HideCard.EUROPEAN)
             dealerHand.add(deck.draw());
@@ -131,6 +135,10 @@ public class Engine {
         return deck != null ? deck.getSize() : 0;
     }
 
+    public void setIsSplitWas(boolean status){
+        isSplitWas=status;
+    }
+
     private void revealHideCard() {
         if (hideCard != null) {
             dealerHand.add(new Card(hideCard.suit(), hideCard.value(), UUID.randomUUID().toString()));
@@ -144,8 +152,10 @@ public class Engine {
 
         int playerPoints = softCount(currentHand);
 
-        if (playerPoints==21 && dealerHand.size()==1)
+        if (playerPoints==21 && dealerHand.size()==1 && !isDealerDraw)
             dealerDraw();
+
+        isDealerDraw = false;
 
         int dealerPoints = config.dealerStand() == DealerStand.SOFT_17 ? softCount(dealerHand) : hardCount(dealerHand);
 
@@ -153,7 +163,7 @@ public class Engine {
             status = Status.PLAYER_IS_TOO_MUCH;
         else if (playerPoints == 21 && currentHand.size() == 2 && dealerPoints == 21 && dealerHand.size() == 2)
             status = Status.PUSH;
-        else if (playerPoints == 21 && currentHand.size() == 2)
+        else if (playerPoints == 21 && currentHand.size() == 2 && !isSplitWas)
             status = Status.PLAYER_BLACKJACK;
         else if (dealerPoints == 21 && currentHand.size() == 2)
             status = Status.DEALER_BLACKJACK;
