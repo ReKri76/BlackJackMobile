@@ -399,15 +399,22 @@ fun DealerHandDisplay(
                     )
                 )
             ) {
-                if (card!=null)
+                if (card != null) {
                     BlackjackCard(card)
-                else
-                    Image(
-                        painter = painterResource(id = R.drawable.card_back),
-                        contentDescription = "Card Back",
-                        contentScale = ContentScale.Crop,
+                } else {
+                    ElevatedCard(
                         modifier = modifier.size(width = 70.dp, height = 100.dp),
-                    )
+                        shape = RoundedCornerShape(6.dp),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.card_back),
+                            contentDescription = "Card Back",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
             }
         }
     }
