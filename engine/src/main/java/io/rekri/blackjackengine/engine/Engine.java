@@ -33,7 +33,7 @@ public class Engine {
 
     @NotNull
     public State shuffle() {
-        this.deck = new Deck(config.countOfDecks());
+        this.deck = new Deck(config.isNewDeckPerRound() ? 1 : config.countOfDecks());
         return turn();
     }
 
@@ -79,7 +79,7 @@ public class Engine {
 
         else if (config.hideCardRules()==HideCard.EUROPEAN)
             dealerHand.add(deck.draw());
-        else if (hideCard != null)
+        else
             revealHideCard();
 
         return status(false);
@@ -109,7 +109,7 @@ public class Engine {
         if (config.doubleRules() == DoubleRules.ANY)
             return true;
 
-        if (currentHand.size() < 2)
+        if (config.isDaS() && isSplitWas)
             return false;
 
         final var firstCard = currentHand.get(0);
@@ -138,6 +138,16 @@ public class Engine {
 
     public void setIsSplitWas(boolean status){
         isSplitWas=status;
+    }
+
+    public boolean isSplitWas() {
+        return isSplitWas;
+    }
+
+    public State showHideCard(){
+        if (config.isDealerShowSecondCardInAmericanRule() && config.hideCardRules() == HideCard.AMERICAN)
+            revealHideCard();
+        return status(true);
     }
 
     private void revealHideCard() {

@@ -10,6 +10,8 @@ public record Config (
         @NotNull Boolean isDaS,
         @NotNull HideCard hideCardRules,
         @NotNull DoubleRules doubleRules,
-        @NotNull BlackJackRules blackJackRules
+        @NotNull BlackJackRules blackJackRules,
+        @NotNull Boolean isNewDeckPerRound,
+        @NotNull Boolean isDealerShowSecondCardInAmericanRule
         )
 {}

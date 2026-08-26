@@ -277,7 +277,9 @@ fun RulesDialog(
             true,
             HideCard.EUROPEAN,
             DoubleRules.ANY,
-            BlackJackRules.THREE_TO_TWO
+            BlackJackRules.THREE_TO_TWO,
+            false,
+            false
         )
 
     var countOfDecks by remember { mutableIntStateOf(currentConfig.countOfDecks) }
@@ -287,6 +289,8 @@ fun RulesDialog(
     var hideCardRules by remember { mutableStateOf(currentConfig.hideCardRules) }
     var doubleRules by remember { mutableStateOf(currentConfig.doubleRules) }
     var blackJackRules by remember { mutableStateOf(currentConfig.blackJackRules) }
+    var isNewDeckPerRound by remember { mutableStateOf(currentConfig.isNewDeckPerRound) }
+    var isDealerShowSecondCardInAmericanRule by remember { mutableStateOf(currentConfig.isDealerShowSecondCardInAmericanRule) }
 
     AlertDialog(
         onDismissRequest = {},
@@ -299,12 +303,21 @@ fun RulesDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 RuleDropdown(
-                    label = "Decks",
-                    options = listOf(3, 4, 5, 6, 7, 8),
-                    selected = countOfDecks,
-                    optionLabel = { "$it deck${if (it > 1) "s" else ""}" },
-                    onSelected = { countOfDecks = it }
+                    label = "New deck",
+                    options = listOf(false, true),
+                    selected = isNewDeckPerRound,
+                    optionLabel = { if (it) "New deck every round (one deck)" else "Save deck" },
+                    onSelected = { isNewDeckPerRound = it }
                 )
+
+                if (!isNewDeckPerRound)
+                    RuleDropdown(
+                        label = "Decks",
+                        options = listOf(3, 4, 5, 6, 7, 8),
+                        selected = countOfDecks,
+                        optionLabel = { "$it deck${if (it > 1) "s" else ""}" },
+                        onSelected = { countOfDecks = it }
+                    )
 
                 RuleDropdown(
                     label = "Dealer stands on",
@@ -344,6 +357,15 @@ fun RulesDialog(
                     onSelected = { hideCardRules = it }
                 )
 
+                if (hideCardRules == HideCard.AMERICAN)
+                    RuleDropdown(
+                        label = "Dealer show second card",
+                        options = listOf(false, true),
+                        selected = isDealerShowSecondCardInAmericanRule,
+                        optionLabel = { if (it) "Yes" else "No" },
+                        onSelected = { isDealerShowSecondCardInAmericanRule = it }
+                    )
+
                 RuleDropdown(
                     label = "Doubling allowed on",
                     options = DoubleRules.entries,
@@ -378,7 +400,9 @@ fun RulesDialog(
                             isDaS,
                             hideCardRules,
                             doubleRules,
-                            blackJackRules
+                            blackJackRules,
+                            isNewDeckPerRound,
+                            isDealerShowSecondCardInAmericanRule
                         )
                     )
                 }
