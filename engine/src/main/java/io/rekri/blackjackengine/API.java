@@ -175,7 +175,7 @@ public class API {
 
         var win = -currentBet / 2.0;
 
-        engine.showHideCard();
+        currentState = engine.showHideCard();
 
         var dealerHand = currentState.dealer();
 
