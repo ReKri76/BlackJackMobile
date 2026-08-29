@@ -89,11 +89,12 @@ public class Engine {
         if (config.surrender() == Surrender.NO_SURRENDER)
             return false;
 
-        return currentHand.size() == 2;
+        return currentHand.size() == 2 && !isSplitWas;
     }
 
     public boolean isSplitAvailable(){
-        return currentHand.size() == 2 && currentHand.get(0).value() == currentHand.get(1).value() &&
+        return currentHand.size() == 2 && currentHand.get(0).value().getValue()
+                == currentHand.get(1).value().getValue() &&
                 !isDealerBlackJack();
     }
 
