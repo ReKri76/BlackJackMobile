@@ -92,7 +92,7 @@ public class Engine {
     }
 
     public boolean isDealerBlackJack(){
-        if (config.hideCardRules().equals(HideCard.AMERICAN))
+        if (hideCard!=null)
             dealerHand.add(hideCard);
 
         var res = dealerHand.size() == 2 &&
