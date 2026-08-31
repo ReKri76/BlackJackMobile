@@ -49,7 +49,7 @@ class GameViewModel : ViewModel() {
             stack = 0.0,
             sizeOfDeck = 0,
             isInsuranceOffered = false,
-            isSplitAvailable = false,
+            isSplitAvailable = engine.isSplitAvailable,
             currentBet = 0.0,
             split = 0,
             isAmericanRules = isAmericanRules(),
@@ -78,7 +78,7 @@ class GameViewModel : ViewModel() {
                 stack = 0.0,
                 sizeOfDeck = 0,
                 isInsuranceOffered = false,
-                isSplitAvailable = false,
+                isSplitAvailable = engine.isSplitAvailable,
                 currentBet = 0.0,
                 split = 0,
                 isAmericanRules = isAmericanRules(),
@@ -304,10 +304,6 @@ class GameViewModel : ViewModel() {
 
     private fun update(response: API.Response) {
 
-        val isSplitAvailable = (response.state.player.size == 2
-                && response.state.player[0].value == response.state.player[1].value
-                )
-
         _uiState.value = UiState(
             dealerHand = if (response.state.status == Status.CONTINUE || response.state.status == Status.WAITING)
                 listOf(response.state.dealer[0]) else response.state.dealer,
@@ -316,7 +312,7 @@ class GameViewModel : ViewModel() {
             stack = stack,
             sizeOfDeck = response.deckSize,
             isInsuranceOffered = response.insuranceIsOffered,
-            isSplitAvailable = isSplitAvailable,
+            isSplitAvailable = engine.isSplitAvailable,
             currentBet = currentBet,
             split = splits.size,
             isAmericanRules = isAmericanRules(),

@@ -114,13 +114,6 @@ public class API {
 
         currentState = engine.draw();
 
-        if (engine.isDealerBlackJack()){
-            currentState = engine.dealerDraw();
-            isGameOver = true;
-            return new Response(currentState, false, -currentBet - insuranceBet,
-                    engine.getSizeOfDeck());
-        }
-
         if (currentState.status().equals(Status.PLAYER_IS_TOO_MUCH)) {
             isGameOver = true;
             currentState = engine.showHideCard();
@@ -165,13 +158,6 @@ public class API {
 
         currentState = engine.draw();
 
-        if (engine.isDealerBlackJack()){
-            currentState = engine.dealerDraw();
-            isGameOver = true;
-            return new Response(currentState, false, -currentBet - insuranceBet,
-                    engine.getSizeOfDeck());
-        }
-
         currentBet *= 2;
 
         if (currentState.status().equals(Status.PLAYER_IS_TOO_MUCH)) {
@@ -211,6 +197,11 @@ public class API {
         var resState = new State(dealerHand, currentState.player(), Status.LOSE);
 
         return new Response(resState, false, win, engine.getSizeOfDeck());
+    }
+
+    @NotNull
+    public Boolean isSplitAvailable(){
+        return engine.isSplitAvailable();
     }
 
     @NotNull

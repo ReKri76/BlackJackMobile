@@ -18,7 +18,6 @@ public class Engine {
     @Nullable private Card hideCard;
     @NotNull private final List<@NotNull Card> currentHand = new ArrayList<>();
     @NotNull private final Config config;
-    private boolean isDealerDraw = false;
     private boolean isSplitWas = false;
 
     public record State(
@@ -56,11 +55,10 @@ public class Engine {
 
     @NotNull
     public State end() {
-        if (!isSplitWas)
-            revealHideCard();
-
-        while (config.dealerStand().equals(DealerStand.SOFT_17) ? softCount(dealerHand) <= 16 : hardCount(dealerHand) <= 16)
+        while (config.dealerStand().equals(DealerStand.SOFT_17) ?
+                softCount(dealerHand) <= 16 : hardCount(dealerHand) <= 16)
             dealerHand.add(deck.draw());
+
         return status(true);
     }
 
@@ -72,12 +70,7 @@ public class Engine {
 
     @NotNull
     public State dealerDraw() {
-        if (dealerHand.get(0).value().getValue() != 11 && dealerHand.get(0).value().getValue() != 10) {
-            isDealerDraw = true;
-            return status(false);
-        }
-
-        else if (config.hideCardRules().equals(HideCard.EUROPEAN))
+        if (config.hideCardRules().equals(HideCard.EUROPEAN))
             dealerHand.add(deck.draw());
         else
             revealHideCard();
@@ -99,14 +92,17 @@ public class Engine {
     }
 
     public boolean isDealerBlackJack(){
-        if (currentHand.size()==2 && config.surrender().equals(Surrender.EARLY_SURRENDER))
-            return false;
-
         if (config.hideCardRules().equals(HideCard.AMERICAN))
             dealerHand.add(hideCard);
-        var res = status(false);
+
+        var res = dealerHand.size() == 2 &&
+                (dealerHand.get(0).value().equals(Value.ACE) && dealerHand.get(1).value().getValue() == 10 ||
+                        dealerHand.get(1).value().equals(Value.ACE) && dealerHand.get(0).value().getValue() == 10
+                );
+
         dealerHand.remove(hideCard);
-        return res.status().equals(Status.DEALER_BLACKJACK);
+
+        return res;
     }
 
     public boolean isDoubleAvailable(){
@@ -129,7 +125,7 @@ public class Engine {
         Engine res = new Engine(this.config);
         res.deck = this.deck;
         final var currentFirst = currentHand.get(0);
-        res.currentHand.add(new Card(currentFirst.suit(), currentFirst.value(), UUID.randomUUID().toString()));
+        res.currentHand.add(new Card(currentFirst.suit(), currentFirst.value(), currentFirst.uuid()));
         currentHand.remove(0);
         res.dealerHand = this.dealerHand;
         res.hideCard = this.hideCard;
@@ -145,7 +141,7 @@ public class Engine {
         isSplitWas=status;
     }
 
-    public boolean isSplitWas() {
+    public boolean isSplitWas(){
         return isSplitWas;
     }
 
@@ -157,7 +153,7 @@ public class Engine {
 
     private void revealHideCard() {
         if (hideCard != null) {
-            dealerHand.add(new Card(hideCard.suit(), hideCard.value(), UUID.randomUUID().toString()));
+            dealerHand.add(new Card(hideCard.suit(), hideCard.value(), hideCard.uuid()));
             hideCard = null;
         }
     }
@@ -168,23 +164,16 @@ public class Engine {
 
         int playerPoints = softCount(currentHand);
 
-        if (playerPoints==21 && dealerHand.size()==1 && !isDealerDraw)
-            dealerDraw();
-
-        isDealerDraw = false;
-
-        int dealerPoints = config.dealerStand().equals(DealerStand.SOFT_17) ? softCount(dealerHand) : hardCount(dealerHand);
+        int dealerPoints = config.dealerStand().equals(DealerStand.SOFT_17) ? softCount(dealerHand)
+                : hardCount(dealerHand);
 
         if (playerPoints > 21)
             status = Status.PLAYER_IS_TOO_MUCH;
-        else if (playerPoints == 21 && currentHand.size() == 2 && dealerPoints == 21 && dealerHand.size() == 2)
+        else if (playerPoints == 21 && currentHand.size() == 2 && isDealerBlackJack())
             status = Status.PUSH;
         else if (playerPoints == 21 && currentHand.size() == 2 && !isSplitWas)
             status = Status.PLAYER_BLACKJACK;
-        else if  (dealerHand.size() == 2 && (
-                dealerHand.get(0).value().equals(Value.ACE) && dealerHand.get(1).value().getValue()==10
-                || dealerHand.get(1).value().getValue()==10 && dealerHand.get(0).value().equals(Value.ACE))
-        )
+        else if  (isDealerBlackJack())
             status = Status.DEALER_BLACKJACK;
         else if (dealerPoints > 21)
             status = Status.DEALER_IS_TOO_MUCH;
