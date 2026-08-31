@@ -24,7 +24,7 @@ class GameViewModel : ViewModel() {
     private var stack: Double = 0.0
     private var currentBet: Double = 0.0
     private var stackDelta: Double? = null
-    private var config: Config? = null
+    private var config: Config? = engine.config
 
     data class UiState(
         val dealerHand: List<Card>?,
@@ -54,7 +54,7 @@ class GameViewModel : ViewModel() {
             split = 0,
             isAmericanRules = isAmericanRules(),
             isDoubleAvailable = isDoubleAvailable(false),
-            isSurrenderAvailable = isSurrenderAvailable(0)
+            isSurrenderAvailable = false
         )
     )
 
@@ -83,7 +83,7 @@ class GameViewModel : ViewModel() {
                 split = 0,
                 isAmericanRules = isAmericanRules(),
                 isDoubleAvailable = isDoubleAvailable(false),
-                isSurrenderAvailable = isSurrenderAvailable(0)
+                isSurrenderAvailable = currentEngine.isSurrenderAvailable
             )
     }
 
@@ -321,7 +321,7 @@ class GameViewModel : ViewModel() {
             split = splits.size,
             isAmericanRules = isAmericanRules(),
             isDoubleAvailable = isDoubleAvailable(response.state.player.isNotEmpty()),
-            isSurrenderAvailable = isSurrenderAvailable(response.state.player.size)
+            isSurrenderAvailable = currentEngine.isSurrenderAvailable
         )
     }
 
@@ -334,9 +334,5 @@ class GameViewModel : ViewModel() {
             false
         else
             config!!.hideCardRules == HideCard.AMERICAN
-    }
-
-    private fun isSurrenderAvailable(playerHandSize: Int): Boolean {
-        return playerHandSize == 2 && config?.surrender != Surrender.NO_SURRENDER
     }
 }

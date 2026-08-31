@@ -49,7 +49,7 @@ public class Engine {
         currentHand.add(deck.draw());
 
         dealerHand.add(deck.draw());
-        hideCard = config.hideCardRules() == HideCard.AMERICAN ? deck.draw() : null;
+        hideCard = config.hideCardRules().equals(HideCard.AMERICAN) ? deck.draw() : null;
 
         return status(false);
     }
@@ -59,7 +59,7 @@ public class Engine {
         if (!isSplitWas)
             revealHideCard();
 
-        while (config.dealerStand() == DealerStand.SOFT_17 ? softCount(dealerHand) <= 16 : hardCount(dealerHand) <= 16)
+        while (config.dealerStand().equals(DealerStand.SOFT_17) ? softCount(dealerHand) <= 16 : hardCount(dealerHand) <= 16)
             dealerHand.add(deck.draw());
         return status(true);
     }
@@ -77,7 +77,7 @@ public class Engine {
             return status(false);
         }
 
-        else if (config.hideCardRules()==HideCard.EUROPEAN)
+        else if (config.hideCardRules().equals(HideCard.EUROPEAN))
             dealerHand.add(deck.draw());
         else
             revealHideCard();
@@ -86,10 +86,10 @@ public class Engine {
     }
 
     public boolean isSurrenderAvailable() {
-        if (config.surrender() == Surrender.NO_SURRENDER)
+        if (config.surrender().equals(Surrender.NO_SURRENDER) || isSplitWas)
             return false;
 
-        return currentHand.size() == 2 && !isSplitWas;
+        return currentHand.size() == 2;
     }
 
     public boolean isSplitAvailable(){
@@ -99,15 +99,18 @@ public class Engine {
     }
 
     public boolean isDealerBlackJack(){
-        if (config.hideCardRules()==HideCard.AMERICAN)
+        if (currentHand.size()==2 && config.surrender().equals(Surrender.EARLY_SURRENDER))
+            return false;
+
+        if (config.hideCardRules().equals(HideCard.AMERICAN))
             dealerHand.add(hideCard);
         var res = status(false);
         dealerHand.remove(hideCard);
-        return res.status==Status.DEALER_BLACKJACK;
+        return res.status().equals(Status.DEALER_BLACKJACK);
     }
 
     public boolean isDoubleAvailable(){
-        if (config.doubleRules() == DoubleRules.ANY)
+        if (config.doubleRules().equals(DoubleRules.ANY))
             return true;
 
         if (config.isDaS() && isSplitWas)
@@ -117,8 +120,8 @@ public class Engine {
         final var secondCard = currentHand.get(1);
         final var sum = firstCard.value().getValue() + secondCard.value().getValue();
 
-        return config.doubleRules() == DoubleRules.TEN_ELEVEN && (sum == 10 || sum == 11) ||
-                config.doubleRules() == DoubleRules.NINE_TEN_ELEVEN && (sum == 10 || sum == 11 || sum == 9);
+        return config.doubleRules().equals(DoubleRules.TEN_ELEVEN) && (sum == 10 || sum == 11) ||
+                config.doubleRules().equals(DoubleRules.NINE_TEN_ELEVEN) && (sum == 10 || sum == 11 || sum == 9);
     }
 
     @NotNull
@@ -130,6 +133,7 @@ public class Engine {
         currentHand.remove(0);
         res.dealerHand = this.dealerHand;
         res.hideCard = this.hideCard;
+        res.isSplitWas=this.isSplitWas;
         return res;
     }
 
@@ -146,7 +150,7 @@ public class Engine {
     }
 
     public State showHideCard(){
-        if (config.isDealerShowSecondCardInAmericanRule() && config.hideCardRules() == HideCard.AMERICAN)
+        if (config.isDealerShowSecondCardInAmericanRule() && config.hideCardRules().equals(HideCard.AMERICAN))
             revealHideCard();
         return status(true);
     }
@@ -169,7 +173,7 @@ public class Engine {
 
         isDealerDraw = false;
 
-        int dealerPoints = config.dealerStand() == DealerStand.SOFT_17 ? softCount(dealerHand) : hardCount(dealerHand);
+        int dealerPoints = config.dealerStand().equals(DealerStand.SOFT_17) ? softCount(dealerHand) : hardCount(dealerHand);
 
         if (playerPoints > 21)
             status = Status.PLAYER_IS_TOO_MUCH;
@@ -177,7 +181,10 @@ public class Engine {
             status = Status.PUSH;
         else if (playerPoints == 21 && currentHand.size() == 2 && !isSplitWas)
             status = Status.PLAYER_BLACKJACK;
-        else if (dealerPoints == 21 && currentHand.size() == 2)
+        else if  (dealerHand.size() == 2 && (
+                dealerHand.get(0).value().equals(Value.ACE) && dealerHand.get(1).value().getValue()==10
+                || dealerHand.get(1).value().getValue()==10 && dealerHand.get(0).value().equals(Value.ACE))
+        )
             status = Status.DEALER_BLACKJACK;
         else if (dealerPoints > 21)
             status = Status.DEALER_IS_TOO_MUCH;
@@ -200,7 +207,7 @@ public class Engine {
 
         for (Card card : hand) {
             count += card.value().getValue();
-            if (card.value() == Value.ACE)
+            if (card.value().equals(Value.ACE))
                 aces++;
         }
 
@@ -216,7 +223,7 @@ public class Engine {
         int count = 0;
 
         for (Card card : hand)
-            count += card.value().getValue();
+            count += card.value().equals(Value.ACE) ? 1 : card.value().getValue();
 
         return count;
     }

@@ -82,7 +82,7 @@ fun MainWidget(
         Status.CONTINUE, Status.WAITING -> {}
     }
 
-    var configWindow by remember { mutableStateOf(true) }
+    var configWindow by remember { mutableStateOf(false) }
 
     if (configWindow)
         RulesDialog(

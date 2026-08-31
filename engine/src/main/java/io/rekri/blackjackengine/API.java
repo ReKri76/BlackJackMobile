@@ -34,15 +34,15 @@ public class API {
 
     public API() {
         this.config= new Config(
-                8,
-                DealerStand.SOFT_17,
-                Surrender.EARLY_SURRENDER,
+                1,
+                DealerStand.HARD_17,
+                Surrender.LATE_SURRENDER,
                 true,
-                HideCard.EUROPEAN,
-                DoubleRules.ANY,
+                HideCard.AMERICAN,
+                DoubleRules.NINE_TEN_ELEVEN,
                 BlackJackRules.THREE_TO_TWO,
-                false,
-                false
+                true,
+                true
         );
         engine = new Engine(this.config);
         minSizeOfDeck = 52 * this.config.countOfDecks()/3;
@@ -66,6 +66,11 @@ public class API {
     }
 
     @NotNull
+    public Config getConfig(){
+        return this.config;
+    }
+
+    @NotNull
     public Response newGame(double bet) {
         if (bet <= 0)
             throw new IllegalArgumentException("Bet must be positive");
@@ -79,15 +84,15 @@ public class API {
         currentState = engine.getSizeOfDeck() < minSizeOfDeck  || config.isNewDeckPerRound() ?
                 engine.shuffle() : engine.turn();
 
-        if (currentState.status() == Status.PLAYER_BLACKJACK) {
+        if (currentState.status().equals(Status.PLAYER_BLACKJACK)) {
             isGameOver = true;
             currentState = engine.showHideCard();
             return new Response(currentState, false,
-                    currentBet * (config.blackJackRules() == BlackJackRules.THREE_TO_TWO ? 1.5 : 1.2),
+                    currentBet * (config.blackJackRules().equals(BlackJackRules.THREE_TO_TWO) ? 1.5 : 1.2),
                     engine.getSizeOfDeck());
         }
 
-        if (currentState.dealer().get(0).value() == Value.ACE) {
+        if (currentState.dealer().get(0).value().equals(Value.ACE)) {
             insuranceIsOffered = true;
             return new Response(currentState, true, null, engine.getSizeOfDeck());
         }
@@ -109,7 +114,14 @@ public class API {
 
         currentState = engine.draw();
 
-        if (currentState.status()==Status.PLAYER_IS_TOO_MUCH) {
+        if (engine.isDealerBlackJack()){
+            currentState = engine.dealerDraw();
+            isGameOver = true;
+            return new Response(currentState, false, -currentBet - insuranceBet,
+                    engine.getSizeOfDeck());
+        }
+
+        if (currentState.status().equals(Status.PLAYER_IS_TOO_MUCH)) {
             isGameOver = true;
             currentState = engine.showHideCard();
             return new Response(currentState, false, -currentBet - insuranceBet,
@@ -127,7 +139,7 @@ public class API {
         currentState = engine.end();
 
         double insuranceProfit = insuranceBet > 0
-                ? (currentState.status()==Status.DEALER_BLACKJACK ? insuranceBet * 2.0 : -insuranceBet) : 0.0;
+                ? (currentState.status().equals(Status.DEALER_BLACKJACK) ? insuranceBet * 2.0 : -insuranceBet) : 0.0;
 
         Status status = currentState.status();
         double mainBetProfit;
@@ -151,8 +163,16 @@ public class API {
         if (!engine.isDoubleAvailable())
             throw new IllegalStateException("By current rules double is not available");
 
-        currentBet *= 2;
         currentState = engine.draw();
+
+        if (engine.isDealerBlackJack()){
+            currentState = engine.dealerDraw();
+            isGameOver = true;
+            return new Response(currentState, false, -currentBet - insuranceBet,
+                    engine.getSizeOfDeck());
+        }
+
+        currentBet *= 2;
 
         if (currentState.status().equals(Status.PLAYER_IS_TOO_MUCH)) {
             isGameOver = true;
@@ -179,11 +199,11 @@ public class API {
 
         var dealerHand = currentState.dealer();
 
-        if (config.surrender() == Surrender.LATE_SURRENDER){
+        if (config.surrender().equals(Surrender.LATE_SURRENDER)){
             var res = engine.dealerDraw();
             dealerHand = res.dealer();
 
-            if (res.status() == Status.DEALER_BLACKJACK)
+            if (res.status().equals(Status.DEALER_BLACKJACK))
                 win = -currentBet;
 
         }
@@ -221,6 +241,11 @@ public class API {
         return engine.isDoubleAvailable();
     }
 
+    @NotNull
+    public Boolean isSurrenderAvailable(){
+        return engine.isSurrenderAvailable();
+    }
+
     public Response makeInsurance() {
         checkNotGameOver();
 
@@ -245,7 +270,7 @@ public class API {
         return new Response(state, insuranceIsOffered, null, engine.getSizeOfDeck());
     }
     public Response skipInsurance(){
-        if (engine.isDealerBlackJack() && config.hideCardRules() != HideCard.EUROPEAN){
+        if (engine.isDealerBlackJack() && !config.hideCardRules().equals(HideCard.EUROPEAN)){
             currentState = engine.dealerDraw();
             isGameOver = true;
             return new Response(currentState, false,
