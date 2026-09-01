@@ -8,3 +8,4 @@ Supports combinations of the following rules:
 5. Hole card: European or American rules.
 6. Blackjack payout: 3:2 or 6:5.
 7. Doubling down: any cards, 10 & 11, or 9, 10 & 11.
+8. Create a new deck every round or play one big shoe.

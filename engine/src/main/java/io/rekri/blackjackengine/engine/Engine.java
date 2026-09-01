@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class Engine {
     private Deck deck;
@@ -24,9 +23,9 @@ public class Engine {
             @NotNull List<Card> dealer,
             @NotNull List<Card> player,
             @NotNull Status status
-    ){}
+    ) {}
 
-    public Engine(@NotNull Config config){
+    public Engine(@NotNull Config config) {
         this.config = config;
     }
 
@@ -37,7 +36,7 @@ public class Engine {
     }
 
     @NotNull
-    public List<Card> getCurrentHand(){ return currentHand; }
+    public List<Card> getCurrentHand() { return currentHand; }
 
     @NotNull
     public State turn() {
@@ -55,6 +54,9 @@ public class Engine {
 
     @NotNull
     public State end() {
+        if (isDealerBlackJack())
+            return new State(List.copyOf(dealerHand), List.copyOf(currentHand), Status.DEALER_BLACKJACK);
+
         while (config.dealerStand().equals(DealerStand.SOFT_17) ?
                 softCount(dealerHand) <= 16 : hardCount(dealerHand) <= 16)
             dealerHand.add(deck.draw());
@@ -68,6 +70,9 @@ public class Engine {
         return status(false);
     }
 
+    /**
+     * Draw card or show hide card if it exists.
+     */
     @NotNull
     public State dealerDraw() {
         if (config.hideCardRules().equals(HideCard.EUROPEAN))
@@ -85,14 +90,14 @@ public class Engine {
         return currentHand.size() == 2;
     }
 
-    public boolean isSplitAvailable(){
+    public boolean isSplitAvailable() {
         return currentHand.size() == 2 && currentHand.get(0).value().getValue()
                 == currentHand.get(1).value().getValue() &&
                 !isDealerBlackJack();
     }
 
-    public boolean isDealerBlackJack(){
-        if (hideCard!=null)
+    public boolean isDealerBlackJack() {
+        if (hideCard != null)
             dealerHand.add(hideCard);
 
         var res = dealerHand.size() == 2 &&
@@ -105,7 +110,7 @@ public class Engine {
         return res;
     }
 
-    public boolean isDoubleAvailable(){
+    public boolean isDoubleAvailable() {
         if (config.doubleRules().equals(DoubleRules.ANY))
             return true;
 
@@ -121,15 +126,15 @@ public class Engine {
     }
 
     @NotNull
-    public Engine split(){
-        Engine res = new Engine(this.config);
+    public Engine split() {
+        var res = new Engine(this.config);
         res.deck = this.deck;
         final var currentFirst = currentHand.get(0);
         res.currentHand.add(new Card(currentFirst.suit(), currentFirst.value(), currentFirst.uuid()));
         currentHand.remove(0);
         res.dealerHand = this.dealerHand;
         res.hideCard = this.hideCard;
-        res.isSplitWas=this.isSplitWas;
+        res.isSplitWas = this.isSplitWas;
         return res;
     }
 
@@ -137,15 +142,18 @@ public class Engine {
         return deck != null ? deck.getSize() : 0;
     }
 
-    public void setIsSplitWas(boolean status){
-        isSplitWas=status;
+    public void setIsSplitWas(boolean status) {
+        isSplitWas = status;
     }
 
-    public boolean isSplitWas(){
+    public boolean isSplitWas() {
         return isSplitWas;
     }
 
-    public State showHideCard(){
+    /**
+     * Showing hide card in american rules if enabled in settings.
+     */
+    public State showHideCard() {
         if (config.isDealerShowSecondCardInAmericanRule() && config.hideCardRules().equals(HideCard.AMERICAN))
             revealHideCard();
         return status(true);
@@ -160,20 +168,22 @@ public class Engine {
 
     @NotNull
     private State status(boolean isOver) {
-        Status status;
+        var playerPoints = softCount(currentHand);
 
-        int playerPoints = softCount(currentHand);
-
-        int dealerPoints = config.dealerStand().equals(DealerStand.SOFT_17) ? softCount(dealerHand)
+        var dealerPoints = config.dealerStand().equals(DealerStand.SOFT_17) ? softCount(dealerHand)
                 : hardCount(dealerHand);
+
+        final var dealerBlackJack = isDealerBlackJack();
+
+        var status = Status.CONTINUE;
 
         if (playerPoints > 21)
             status = Status.PLAYER_IS_TOO_MUCH;
-        else if (playerPoints == 21 && currentHand.size() == 2 && isDealerBlackJack())
+        else if (playerPoints == 21 && currentHand.size() == 2 && dealerBlackJack)
             status = Status.PUSH;
         else if (playerPoints == 21 && currentHand.size() == 2 && !isSplitWas)
             status = Status.PLAYER_BLACKJACK;
-        else if  (isDealerBlackJack())
+        else if (dealerBlackJack)
             status = Status.DEALER_BLACKJACK;
         else if (dealerPoints > 21)
             status = Status.DEALER_IS_TOO_MUCH;
@@ -184,17 +194,15 @@ public class Engine {
                 status = Status.WIN;
             else
                 status = Status.PUSH;
-        else
-            status = Status.CONTINUE;
 
         return new State(List.copyOf(dealerHand), List.copyOf(currentHand), status);
     }
 
     private int softCount(List<Card> hand) {
-        int count = 0;
-        int aces = 0;
+        var count = 0;
+        var aces = 0;
 
-        for (Card card : hand) {
+        for (var card : hand) {
             count += card.value().getValue();
             if (card.value().equals(Value.ACE))
                 aces++;
@@ -208,10 +216,10 @@ public class Engine {
         return count;
     }
 
-    private int hardCount(List<Card> hand){
-        int count = 0;
+    private int hardCount(List<Card> hand) {
+        var count = 0;
 
-        for (Card card : hand)
+        for (var card : hand)
             count += card.value().equals(Value.ACE) ? 1 : card.value().getValue();
 
         return count;
