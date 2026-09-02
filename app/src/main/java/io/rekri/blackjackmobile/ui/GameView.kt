@@ -59,8 +59,13 @@ fun MainWidget(
             isSplit = isSplit,
             icon = Icons.Default.Warning
         ) { viewModel.stopGame() }
-        Status.LOSE, Status.PLAYER_IS_TOO_MUCH, Status.DEALER_BLACKJACK -> EndOfRoundDialog(
+        Status.LOSE, Status.PLAYER_IS_TOO_MUCH-> EndOfRoundDialog(
             text = "Lose" to ResultLoss,
+            isSplit = isSplit,
+            icon = Icons.Default.Close
+        ) { viewModel.stopGame() }
+        Status.DEALER_BLACKJACK -> EndOfRoundDialog(
+            text = "Dealer BlackJack!" to ResultLoss,
             isSplit = isSplit,
             icon = Icons.Default.Close
         ) { viewModel.stopGame() }

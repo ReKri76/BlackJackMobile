@@ -9,6 +9,8 @@ import io.rekri.blackjackengine.engine.config.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 public class API {
     private final Engine engine;
     State currentState;
@@ -64,6 +66,7 @@ public class API {
         this.insuranceIsOffered = api.insuranceIsOffered;
         this.config = api.config;
         this.minSizeOfDeck = api.minSizeOfDeck;
+        this.splitedHand = api.splitedHand;
     }
 
     @NotNull
@@ -88,7 +91,13 @@ public class API {
 
         if (currentState.status().equals(Status.PLAYER_BLACKJACK)) {
             isGameOver = true;
-            currentState = engine.showHideCard();
+            currentState = engine.dealerDraw();
+
+            if (currentState.status().equals(Status.PUSH)){
+                return new Response(currentState, false, 0.0,
+                        engine.getSizeOfDeck());
+            }
+
             return new Response(currentState, false,
                     currentBet * (config.blackJackRules().equals(BlackJackRules.THREE_TO_TWO) ? 1.5 : 1.2),
                     engine.getSizeOfDeck());
@@ -140,6 +149,13 @@ public class API {
     public Response stand() {
         checkNotGameOver();
         isGameOver = true;
+
+        if (config.hideCardRules().equals(HideCard.EUROPEAN)){
+            engine.dealerDraw();
+            var res = chekDealerBlackJack();
+            if (res!=null)
+                return res;
+        }
 
         currentState = engine.end();
 
@@ -196,11 +212,19 @@ public class API {
 
         isGameOver = true;
 
-        var win = -currentBet / 2.0;
+        if (config.surrender().equals(Surrender.LATE_SURRENDER)
+                && config.hideCardRules().equals(HideCard.EUROPEAN)){
+            currentState = engine.dealerDraw();
+            currentState = new State(currentState.dealer(), currentState.player(), Status.LOSE);
+
+            final var res = chekDealerBlackJack();
+            return Objects.requireNonNullElseGet(res, () ->
+                    new Response(currentState, false, -currentBet / 2, engine.getSizeOfDeck()));
+        }
 
         currentState = engine.showHideCard();
 
-        return new Response(currentState, false, win, engine.getSizeOfDeck());
+        return new Response(currentState, false, -currentBet / 2 , engine.getSizeOfDeck());
     }
 
     @NotNull
@@ -299,7 +323,8 @@ public class API {
             currentState = engine.showHideCard();
             return new Response(currentState, false, -currentBet + insuranceProfit,
                     engine.getSizeOfDeck());
-        } else
+        }
+        else
             return null;
     }
 }
