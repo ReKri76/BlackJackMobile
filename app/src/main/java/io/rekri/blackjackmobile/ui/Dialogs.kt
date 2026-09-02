@@ -313,7 +313,7 @@ fun RulesDialog(
                 if (!isNewDeckPerRound)
                     RuleDropdown(
                         label = "Decks",
-                        options = listOf(3, 4, 5, 6, 7, 8),
+                        options = listOf(1,2, 3, 4, 5, 6, 7, 8),
                         selected = countOfDecks,
                         optionLabel = { "$it deck${if (it > 1) "s" else ""}" },
                         onSelected = { countOfDecks = it }

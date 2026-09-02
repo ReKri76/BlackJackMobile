@@ -18,6 +18,7 @@ public class Engine {
     @NotNull private final List<@NotNull Card> currentHand = new ArrayList<>();
     @NotNull private final Config config;
     private boolean isSplitWas = false;
+    private boolean splitWasSkip = false;
 
     public record State(
             @NotNull List<Card> dealer,
@@ -40,6 +41,9 @@ public class Engine {
 
     @NotNull
     public State turn() {
+
+        splitWasSkip = false;
+
         currentHand.clear();
         dealerHand.clear();
 
@@ -91,7 +95,7 @@ public class Engine {
     }
 
     public boolean isSplitAvailable() {
-        return currentHand.size() == 2 && currentHand.get(0).value().getValue()
+        return !splitWasSkip && currentHand.size() == 2 && currentHand.get(0).value().getValue()
                 == currentHand.get(1).value().getValue() &&
                 !isDealerBlackJack();
     }
@@ -136,6 +140,11 @@ public class Engine {
         res.hideCard = this.hideCard;
         res.isSplitWas = this.isSplitWas;
         return res;
+    }
+
+    public State skipSplit(){
+        splitWasSkip = true;
+        return status(false);
     }
 
     public int getSizeOfDeck() {

@@ -53,7 +53,7 @@ class GameViewModel : ViewModel() {
             currentBet = 0.0,
             split = 0,
             isAmericanRules = isAmericanRules(),
-            isDoubleAvailable = isDoubleAvailable(false),
+            isDoubleAvailable = false,
             isSurrenderAvailable = false
         )
     )
@@ -82,7 +82,7 @@ class GameViewModel : ViewModel() {
                 currentBet = 0.0,
                 split = 0,
                 isAmericanRules = isAmericanRules(),
-                isDoubleAvailable = isDoubleAvailable(false),
+                isDoubleAvailable = false,
                 isSurrenderAvailable = currentEngine.isSurrenderAvailable
             )
     }
@@ -277,8 +277,7 @@ class GameViewModel : ViewModel() {
     }
 
     fun skipInsurance() {
-        val tmpRes = engine.skipInsurance()
-        val res = API.Response(tmpRes.state, false, tmpRes.win, tmpRes.deckSize)
+        val res = engine.skipInsurance()
         update(res)
     }
 
@@ -295,7 +294,8 @@ class GameViewModel : ViewModel() {
     }
 
     fun skipSplit() {
-        _uiState.update { it.copy(isSplitAvailable = false) }
+        val res = engine.skipSplit()
+        update(res)
     }
 
     fun viewConfig() : Config?{
@@ -312,17 +312,13 @@ class GameViewModel : ViewModel() {
             stack = stack,
             sizeOfDeck = response.deckSize,
             isInsuranceOffered = response.insuranceIsOffered,
-            isSplitAvailable = engine.isSplitAvailable,
+            isSplitAvailable = currentEngine.isSplitAvailable,
             currentBet = currentBet,
             split = splits.size,
             isAmericanRules = isAmericanRules(),
-            isDoubleAvailable = isDoubleAvailable(response.state.player.isNotEmpty()),
+            isDoubleAvailable = currentEngine.isDoubleAvailable,
             isSurrenderAvailable = currentEngine.isSurrenderAvailable
         )
-    }
-
-    private fun isDoubleAvailable(hasActiveHand: Boolean): Boolean {
-        return hasActiveHand && currentEngine.isDoubleAvailable
     }
 
     private fun isAmericanRules(): Boolean {
