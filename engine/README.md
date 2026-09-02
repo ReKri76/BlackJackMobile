@@ -18,7 +18,7 @@ Holds the current game state, whether insurance is offered, the round's profit/l
 - `hit()`: Draws a card for the player. Can result in a bust.
 - `stand()`: Ends the player's turn, executes the dealer's turn, and calculates final winnings (including insurance).
 - `doubleBet()`: Doubles the initial bet, draws exactly one card, and automatically stands (unless busted).
-- `split()`: Splits the current hand. Returns a **new instance** of the `API` class specifically for the split hand.
+- `split()`: Splits the current hand. Returns a **new instance** of the `API` class specifically for the split hand. **Important:** the original (first) split hand must be played to completion last — play out the new hand returned by `split()` first, and only return to the original hand's instance afterward.
 - `surrender()`: Gives up the current hand in exchange for half of the bet. Only available on the initial hand.
 - `makeInsurance()`: Places an insurance bet (half of the original bet). Can only be called immediately after `newGame` if `insuranceIsOffered` is true.
 
