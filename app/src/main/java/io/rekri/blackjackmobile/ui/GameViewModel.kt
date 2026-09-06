@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.rekri.blackjackengine.API
 import io.rekri.blackjackengine.card.Card
+import io.rekri.blackjackengine.card.Suit
+import io.rekri.blackjackengine.card.Value
 import io.rekri.blackjackengine.engine.Engine
 import io.rekri.blackjackengine.engine.Status
 import io.rekri.blackjackengine.engine.config.Config
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Arrays
 import java.util.Stack
 import kotlin.time.Duration.Companion.milliseconds
 

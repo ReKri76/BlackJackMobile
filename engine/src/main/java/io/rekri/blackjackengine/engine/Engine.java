@@ -19,6 +19,7 @@ public class Engine {
     @NotNull private final Config config;
     private boolean isSplitWas = false;
     private boolean splitWasSkip = false;
+    @Nullable private List<Card> deterministicDeck = null;
 
     public record State(
             @NotNull List<Card> dealer,
@@ -32,7 +33,10 @@ public class Engine {
 
     @NotNull
     public State shuffle() {
-        this.deck = new Deck(config.countOfDecks());
+        if (deterministicDeck !=null)
+            deck = new Deck(deterministicDeck);
+        else
+            deck = new Deck(config.countOfDecks());
         return turn();
     }
 
@@ -160,12 +164,16 @@ public class Engine {
     }
 
     /**
-     * Showing hide card in american rules if enabled in settings.
+     * Showing hide card in American rules if enabled in settings.
      */
     public State showHideCard() {
         if (config.isDealerShowSecondCardInAmericanRule() && config.hideCardRules().equals(HideCard.AMERICAN))
             revealHideCard();
         return status(true);
+    }
+
+    public void addDeterministicHand(List<Card> deck){
+        deterministicDeck = deck;
     }
 
     private void revealHideCard() {

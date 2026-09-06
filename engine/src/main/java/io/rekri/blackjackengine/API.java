@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 package io.rekri.blackjackengine;
 
+import io.rekri.blackjackengine.card.Card;
 import io.rekri.blackjackengine.engine.Engine;
 import io.rekri.blackjackengine.engine.Status;
 import io.rekri.blackjackengine.engine.Engine.State;
@@ -9,6 +10,7 @@ import io.rekri.blackjackengine.engine.config.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 
 public class API {
@@ -106,11 +108,11 @@ public class API {
         if (bet <= 0)
             throw new IllegalArgumentException("Bet must be positive");
 
-        this.currentBet = bet;
-        this.insuranceBet = 0.0;
-        this.isGameOver = false;
-        this.insuranceIsOffered = false;
-        this.splitHand =false;
+        currentBet = bet;
+        insuranceBet = 0.0;
+        isGameOver = false;
+        insuranceIsOffered = false;
+        splitHand =false;
         engine.setIsSplitWas(false);
 
         currentState = engine.getSizeOfDeck() < minSizeOfDeck || config.isNewDeckPerRound() ?
@@ -417,6 +419,17 @@ public class API {
     public Response getCurrentResponse() {
         var state = new State(currentState.dealer(), engine.getPlayerHand(), currentState.status());
         return new Response(state, insuranceIsOffered, null, engine.getSizeOfDeck());
+    }
+
+    /**
+     * Injects a fixed, predetermined sequence of cards into the engine, to be drawn
+     * instead of the regular shuffled deck. Intended for testing, where a reproducible
+     * sequence of cards is required.
+     *
+     * @param deck the ordered mutable list of cards to deal in place of the regular deck
+     */
+    public void addDeterministicHand(List<Card> deck){
+        engine.addDeterministicHand(deck);
     }
 
     private void checkNotGameOver() {
