@@ -303,21 +303,20 @@ fun RulesDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 RuleDropdown(
-                    label = "New deck",
+                    label = "New shoe",
                     options = listOf(false, true),
                     selected = isNewDeckPerRound,
-                    optionLabel = { if (it) "New deck every round (one deck)" else "Save deck" },
+                    optionLabel = { if (it) "New shoe every round" else "Save deck" },
                     onSelected = { isNewDeckPerRound = it }
                 )
 
-                if (!isNewDeckPerRound)
-                    RuleDropdown(
-                        label = "Decks",
-                        options = listOf(1,2, 3, 4, 5, 6, 7, 8),
-                        selected = countOfDecks,
-                        optionLabel = { "$it deck${if (it > 1) "s" else ""}" },
-                        onSelected = { countOfDecks = it }
-                    )
+                RuleDropdown(
+                    label = "Decks",
+                    options = listOf(1,2, 3, 4, 5, 6, 7, 8),
+                    selected = countOfDecks,
+                    optionLabel = { "$it deck${if (it > 1) "s" else ""}" },
+                    onSelected = { countOfDecks = it }
+                )
 
                 RuleDropdown(
                     label = "Dealer stands on",

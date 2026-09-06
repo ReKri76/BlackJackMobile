@@ -20,8 +20,16 @@ public class API {
     private boolean insuranceIsOffered = false;
     private boolean isGameOver = false;
     private final Config config;
-    private boolean splitedHand = false;
+    private boolean splitHand = false;
 
+    /**
+     * Represents the outcome of a single game action.
+     *
+     * @param state the resulting game state (dealer/player hands and status)
+     * @param insuranceIsOffered whether insurance is currently being offered to the player
+     * @param win the profit or loss produced by this action, or {@code null} if the round is not yet resolved
+     * @param deckSize the number of cards remaining in the deck
+     */
     public record Response(
             @NotNull State state,
             @NotNull Boolean insuranceIsOffered,
@@ -29,12 +37,27 @@ public class API {
             @NotNull Integer deckSize
     ) {}
 
+    API(Engine engine, Config config) {
+        this.engine = engine;
+        this.config = config;
+        minSizeOfDeck = 52 * this.config.countOfDecks() / 3;
+    }
+
+    /**
+     * Creates a new API instance with the given configuration.
+     * A new game engine is created internally.
+     *
+     * @param config the game configuration to use
+     */
     public API(@NotNull Config config) {
         this.config = config;
         engine = new Engine(this.config);
         minSizeOfDeck = 52 * this.config.countOfDecks() / 3;
     }
 
+    /**
+     * Creates a new API instance with a default rule set
+     */
     public API() {
         this.config = new Config(
                 1,
@@ -51,12 +74,12 @@ public class API {
         minSizeOfDeck = 52 * this.config.countOfDecks() / 3;
     }
 
-    API(Engine engine, Config config) {
-        this.engine = engine;
-        this.config = config;
-        minSizeOfDeck = 52 * this.config.countOfDecks() / 3;
-    }
-
+    /**
+     * Creates a copy of the given API instance.
+     * The underlying engine and configuration are shared, not duplicated.
+     *
+     * @param api the API instance to copy state from
+     */
     public API(@NotNull API api) {
         this.currentBet = api.currentBet;
         this.currentState = api.currentState;
@@ -66,14 +89,18 @@ public class API {
         this.insuranceIsOffered = api.insuranceIsOffered;
         this.config = api.config;
         this.minSizeOfDeck = api.minSizeOfDeck;
-        this.splitedHand = api.splitedHand;
+        this.splitHand = api.splitHand;
     }
 
-    @NotNull
-    public Config getConfig() {
-        return this.config;
-    }
-
+    /**
+     * Starts a new round with the given bet.
+     * Shuffles the deck if needed and deals the initial hands, automatically
+     * resolving player/dealer blackjacks and offering insurance when applicable.
+     *
+     * @param bet the amount to bet; must be positive
+     * @return the response describing the state after dealing
+     * @throws IllegalArgumentException if {@code bet} is not positive
+     */
     @NotNull
     public Response newGame(double bet) {
         if (bet <= 0)
@@ -83,7 +110,7 @@ public class API {
         this.insuranceBet = 0.0;
         this.isGameOver = false;
         this.insuranceIsOffered = false;
-        this.splitedHand=false;
+        this.splitHand =false;
         engine.setIsSplitWas(false);
 
         currentState = engine.getSizeOfDeck() < minSizeOfDeck || config.isNewDeckPerRound() ?
@@ -123,6 +150,58 @@ public class API {
         return new Response(currentState, false, null, engine.getSizeOfDeck());
     }
 
+    /**
+     * Places an insurance bet after the dealer shows an ace.
+     * If the dealer has blackjack, the round is resolved immediately.
+     *
+     * @return the resulting game response
+     * @throws IllegalStateException if the game is already over, or if insurance is not currently offered
+     */
+    @NotNull
+    public Response makeInsurance() {
+        checkNotGameOver();
+
+        if (!insuranceIsOffered)
+            throw new IllegalStateException("Insurance is not offered now");
+
+        insuranceIsOffered = false;
+        insuranceBet = currentBet / 2.0;
+
+        if (engine.isDealerBlackJack()) {
+            currentState = engine.dealerDraw();
+            isGameOver = true;
+            return new Response(currentState, false,
+                    -currentBet + insuranceBet * 2.0, engine.getSizeOfDeck());
+        }
+
+        return new Response(currentState, false, null, engine.getSizeOfDeck());
+    }
+
+    /**
+     * Declines the insurance offer.
+     * If the dealer has blackjack and hole card rules is a European,
+     * the round is resolved immediately.
+     *
+     * @return the resulting game response
+     */
+    @NotNull
+    public Response skipInsurance() {
+        if (engine.isDealerBlackJack() && !config.hideCardRules().equals(HideCard.EUROPEAN)) {
+            currentState = engine.dealerDraw();
+            isGameOver = true;
+            return new Response(currentState, false,
+                    -currentBet - insuranceBet, engine.getSizeOfDeck());
+        } else
+            return new Response(currentState, false, null, engine.getSizeOfDeck());
+    }
+
+    /**
+     * Draws one more card for the player.
+     * Ends the round with a loss if the player busts.
+     *
+     * @return the resulting game response
+     * @throws IllegalStateException if the game is already over
+     */
     @NotNull
     public Response hit() {
         checkNotGameOver();
@@ -136,7 +215,7 @@ public class API {
 
         if (currentState.status().equals(Status.PLAYER_IS_TOO_MUCH)) {
             isGameOver = true;
-            if (!splitedHand)
+            if (!splitHand)
                 currentState = engine.showHideCard();
             return new Response(currentState, false, -currentBet - insuranceBet,
                     engine.getSizeOfDeck());
@@ -145,6 +224,12 @@ public class API {
         return new Response(currentState, false, null, engine.getSizeOfDeck());
     }
 
+    /**
+     * Ends the player's turn, plays out the dealer's hand, and resolves the round.
+     *
+     * @return the resulting game response, including the total profit or loss
+     * @throws IllegalStateException if the game is already over
+     */
     @NotNull
     public Response stand() {
         checkNotGameOver();
@@ -177,6 +262,23 @@ public class API {
                 engine.getSizeOfDeck());
     }
 
+    /**
+     * Checks whether doubling the bet is currently allowed under the active rules.
+     *
+     * @return {@code true} if doubling is available
+     */
+    @NotNull
+    public Boolean isDoubleAvailable() {
+        return engine.isDoubleAvailable();
+    }
+
+    /**
+     * Doubles the current bet, draws exactly one more card, and ends the turn.
+     *
+     * @return the resulting game response
+     * @throws IllegalStateException if the game is already over, if double after split is
+     *                                disallowed, or if doubling is otherwise unavailable
+     */
     @NotNull
     public Response doubleBet() {
         checkNotGameOver();
@@ -203,6 +305,22 @@ public class API {
         return this.stand();
     }
 
+    /**
+     * Checks whether surrendering is currently allowed under the active rules.
+     *
+     * @return {@code true} if surrender is available
+     */
+    @NotNull
+    public Boolean isSurrenderAvailable() {
+        return engine.isSurrenderAvailable();
+    }
+
+    /**
+     * Surrenders the current hand, forfeiting half of the bet.
+     *
+     * @return the resulting game response
+     * @throws IllegalStateException if the game is already over, or if surrender is not available
+     */
     @NotNull
     public Response surrender() {
         checkNotGameOver();
@@ -227,11 +345,24 @@ public class API {
         return new Response(currentState, false, -currentBet / 2 , engine.getSizeOfDeck());
     }
 
+    /**
+     * Checks whether the current hand can be split.
+     *
+     * @return {@code true} if split is available (only on the initial two-card hand)
+     */
     @NotNull
     public Boolean isSplitAvailable() {
         return engine.isSplitAvailable();
     }
 
+    /**
+     * Splits the current hand into two separate hands.
+     * This instance continues to represent the first hand, while the returned
+     * instance represents the newly created second hand.
+     *
+     * @return a new API instance managing the split-off hand
+     * @throws IllegalStateException if the game is already over, or if split is not available
+     */
     @NotNull
     public API split() {
         checkNotGameOver();
@@ -243,70 +374,49 @@ public class API {
 
         var newEngine = engine.split();
 
-        this.currentState = new State(currentState.dealer(), engine.getCurrentHand(), currentState.status());
+        this.currentState = new State(currentState.dealer(), engine.getPlayerHand(), currentState.status());
 
         var newAPI = new API(newEngine, this.config);
         newAPI.insuranceBet = this.insuranceBet;
         newAPI.currentBet = this.currentBet;
-        newAPI.currentState = new State(currentState.dealer(), newEngine.getCurrentHand(), currentState.status());
-        newAPI.splitedHand=true;
+        newAPI.currentState = new State(currentState.dealer(), newEngine.getPlayerHand(), currentState.status());
+        newAPI.splitHand =true;
         engine.draw();
         newAPI.hit();
 
         return newAPI;
     }
 
-    @NotNull
-    public Boolean isDoubleAvailable() {
-        return engine.isDoubleAvailable();
-    }
-
-    @NotNull
-    public Boolean isSurrenderAvailable() {
-        return engine.isSurrenderAvailable();
-    }
-
-    @NotNull
-    public Response makeInsurance() {
-        checkNotGameOver();
-
-        if (!insuranceIsOffered)
-            throw new IllegalStateException("Insurance is not offered now");
-
-        insuranceIsOffered = false;
-        insuranceBet = currentBet / 2.0;
-
-        if (engine.isDealerBlackJack()) {
-            currentState = engine.dealerDraw();
-            isGameOver = true;
-            return new Response(currentState, false,
-                    -currentBet + insuranceBet * 2.0, engine.getSizeOfDeck());
-        }
-
-        return new Response(currentState, false, null, engine.getSizeOfDeck());
-    }
-
-    @NotNull
-    public Response getCurrentResponse() {
-        var state = new State(currentState.dealer(), engine.getCurrentHand(), currentState.status());
-        return new Response(state, insuranceIsOffered, null, engine.getSizeOfDeck());
-    }
-
-    @NotNull
-    public Response skipInsurance() {
-        if (engine.isDealerBlackJack() && !config.hideCardRules().equals(HideCard.EUROPEAN)) {
-            currentState = engine.dealerDraw();
-            isGameOver = true;
-            return new Response(currentState, false,
-                    -currentBet - insuranceBet, engine.getSizeOfDeck());
-        } else
-            return new Response(currentState, false, null, engine.getSizeOfDeck());
-    }
-
+    /**
+     * Skips resolving the split hand and advances the engine to the next state.
+     *
+     * @return the resulting game response
+     */
     @NotNull
     public Response skipSplit(){
         currentState = engine.skipSplit();
         return new Response(currentState, false, null, engine.getSizeOfDeck());
+    }
+
+    /**
+     * Returns the configuration this API instance is using.
+     *
+     * @return the current game configuration
+     */
+    @NotNull
+    public Config getConfig() {
+        return this.config;
+    }
+
+    /**
+     * Returns the current game state without performing any action.
+     *
+     * @return the current game response
+     */
+    @NotNull
+    public Response getCurrentResponse() {
+        var state = new State(currentState.dealer(), engine.getPlayerHand(), currentState.status());
+        return new Response(state, insuranceIsOffered, null, engine.getSizeOfDeck());
     }
 
     private void checkNotGameOver() {
