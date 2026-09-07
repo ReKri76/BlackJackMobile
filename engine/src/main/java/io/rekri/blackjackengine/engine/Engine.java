@@ -65,6 +65,8 @@ public class Engine {
         if (isDealerBlackJack())
             return new State(List.copyOf(dealerHand), List.copyOf(playerHand), Status.DEALER_BLACKJACK);
 
+        revealHideCard();
+
         while (config.dealerStand().equals(DealerStand.SOFT_17) ?
                 softCount(dealerHand) <= 16 : hardCount(dealerHand) <= 16)
             dealerHand.add(deck.draw());
@@ -110,7 +112,7 @@ public class Engine {
 
         var res = dealerHand.size() == 2 &&
                 (dealerHand.get(0).value().equals(Value.ACE) && dealerHand.get(1).value().getValue() == 10 ||
-                        dealerHand.get(1).value().equals(Value.ACE) && dealerHand.get(0).value().getValue() == 10
+                dealerHand.get(1).value().equals(Value.ACE) && dealerHand.get(0).value().getValue() == 10
                 );
 
         dealerHand.remove(hideCard);

@@ -18,7 +18,7 @@ public class API {
     State currentState;
     private double currentBet;
     private double insuranceBet = 0.0;
-    private final int minSizeOfDeck;
+    private int minSizeOfDeck;
     private boolean insuranceIsOffered = false;
     private boolean isGameOver = false;
     private final Config config;
@@ -426,10 +426,12 @@ public class API {
      * instead of the regular shuffled deck. Intended for testing, where a reproducible
      * sequence of cards is required.
      *
+     * @param newMinSizeOfDeck the new size of shoe where this is will shuffle
      * @param deck the ordered mutable list of cards to deal in place of the regular deck
      */
-    public void addDeterministicHand(List<Card> deck){
+    public void addDeterministicDeck(int newMinSizeOfDeck ,List<Card> deck){
         engine.addDeterministicHand(deck);
+        minSizeOfDeck = newMinSizeOfDeck;
     }
 
     private void checkNotGameOver() {

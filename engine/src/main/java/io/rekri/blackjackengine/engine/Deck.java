@@ -30,7 +30,7 @@ public class Deck {
      * Constructor for tests.
      * */
     public Deck(List<Card> inputDeck){
-        cards = inputDeck;
+        cards = new ArrayList<>(inputDeck);
     }
 
     public int getSize(){
