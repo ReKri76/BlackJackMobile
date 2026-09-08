@@ -297,7 +297,7 @@ class GameViewModel : ViewModel() {
     }
 
     fun skipSplit() {
-        val res = engine.skipSplit()
+        val res = currentEngine.skipSplit()
         update(res)
     }
 

@@ -101,8 +101,8 @@ public class Engine {
     }
 
     public boolean isSplitAvailable() {
-        return !splitWasSkip && playerHand.size() == 2 && playerHand.get(0).value()
-                == playerHand.get(1).value() &&
+        return !splitWasSkip && playerHand.size() == 2 &&
+                playerHand.get(0).value() == playerHand.get(1).value() &&
                 !isDealerBlackJack();
     }
 
@@ -143,7 +143,8 @@ public class Engine {
         res.playerHand.add(new Card(currentFirst.suit(), currentFirst.value(), currentFirst.uuid()));
         playerHand.remove(0);
         res.dealerHand = this.dealerHand;
-        res.hideCard = this.hideCard;
+        revealHideCard();
+        res.hideCard = null;
         res.isSplitWas = this.isSplitWas;
         return res;
     }

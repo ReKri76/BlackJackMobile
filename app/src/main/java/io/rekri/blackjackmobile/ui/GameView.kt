@@ -100,13 +100,13 @@ fun MainWidget(
             modifier = modifier
         )
 
-    if (state.isInsuranceOffered && !state.isSplitAvailable && state.status == Status.CONTINUE)
+    if (state.isInsuranceOffered && state.status == Status.CONTINUE)
         InsuranceOffered(
             onConfirm = { viewModel.insurance() },
             onDismiss = { viewModel.skipInsurance() }
         )
 
-    if (state.isSplitAvailable && state.status == Status.CONTINUE)
+    if (state.isSplitAvailable && state.status == Status.CONTINUE && !state.isInsuranceOffered)
         SplitOffered(
             onConfirm = {viewModel.split()},
             onDismiss = {viewModel.skipSplit()}
