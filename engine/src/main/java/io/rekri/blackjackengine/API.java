@@ -343,6 +343,7 @@ public class API {
         }
 
         currentState = engine.showHideCard();
+        currentState = new State(currentState.dealer(), currentState.player(), Status.LOSE);
 
         return new Response(currentState, false, -currentBet / 2 , engine.getSizeOfDeck());
     }

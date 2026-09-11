@@ -167,7 +167,7 @@ public class Engine {
     }
 
     /**
-     * Showing hide card in American rules if enabled in settings.
+     * Showing hide card in American rules when game is over if enabled in settings.
      */
     public State showHideCard() {
         if (config.isDealerShowSecondCardInAmericanRule() && config.hideCardRules().equals(HideCard.AMERICAN))
