@@ -188,12 +188,12 @@ public class API {
      */
     @NotNull
     public Response skipInsurance() {
-        if (engine.isDealerBlackJack() && !config.hideCardRules().equals(HideCard.EUROPEAN)) {
+        if (engine.isDealerBlackJack() && config.hideCardRules().equals(HideCard.AMERICAN)) {
             currentState = engine.dealerDraw();
             isGameOver = true;
-            return new Response(currentState, false,
-                    -currentBet - insuranceBet, engine.getSizeOfDeck());
-        } else
+            return new Response(currentState, false, -currentBet, engine.getSizeOfDeck());
+        }
+        else
             return new Response(currentState, false, null, engine.getSizeOfDeck());
     }
 
@@ -430,7 +430,7 @@ public class API {
      * @param newMinSizeOfDeck the new size of shoe where this is will shuffle
      * @param deck the ordered mutable list of cards to deal in place of the regular deck
      */
-    public void addDeterministicDeck(int newMinSizeOfDeck ,List<Card> deck){
+    public void addDeterministicDeck(int newMinSizeOfDeck, List<Card> deck){
         engine.addDeterministicHand(deck);
         minSizeOfDeck = newMinSizeOfDeck;
     }
@@ -443,7 +443,7 @@ public class API {
     @Nullable
     private Response chekDealerBlackJack() {
         if (engine.isDealerBlackJack()) {
-            var insuranceProfit = insuranceBet > 0 ? insuranceBet * 2.0 : 0.0;
+            var insuranceProfit = insuranceBet = insuranceBet * 2.0;
 
             isGameOver = true;
             currentState = engine.showHideCard();

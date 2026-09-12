@@ -281,6 +281,16 @@ class GameViewModel : ViewModel() {
 
     fun skipInsurance() {
         val res = engine.skipInsurance()
+
+        res.win?.let {
+            if (splits.isNotEmpty())
+                stackDelta = if (stackDelta != null) stackDelta!! + it else it
+            else {
+                stack += if (stackDelta == null) it else stackDelta!! + it
+                currentBet = 0.0
+            }
+        }
+
         update(res)
     }
 
