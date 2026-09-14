@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import io.rekri.blackjackengine.API
 import io.rekri.blackjackengine.engine.config.BlackJackRules
 import io.rekri.blackjackengine.engine.config.Config
 import io.rekri.blackjackengine.engine.config.DealerStand
@@ -270,17 +271,7 @@ fun RulesDialog(
     modifier: Modifier = Modifier
 ) {
     val currentConfig = config
-        ?: Config(
-            8,
-            DealerStand.SOFT_17,
-            Surrender.EARLY_SURRENDER,
-            true,
-            HideCard.EUROPEAN,
-            DoubleRules.ANY,
-            BlackJackRules.THREE_TO_TWO,
-            false,
-            false
-        )
+        ?: API.defaultConfig()
 
     var countOfDecks by remember { mutableIntStateOf(currentConfig.countOfDecks) }
     var dealerStand by remember { mutableStateOf(currentConfig.dealerStand) }
@@ -291,6 +282,7 @@ fun RulesDialog(
     var blackJackRules by remember { mutableStateOf(currentConfig.blackJackRules) }
     var isNewDeckPerRound by remember { mutableStateOf(currentConfig.isNewDeckPerRound) }
     var isDealerShowSecondCardInAmericanRule by remember { mutableStateOf(currentConfig.isDealerShowSecondCardInAmericanRule) }
+    var splitAfterSplit by remember { mutableStateOf(currentConfig.splitAfterSplit()) }
 
     AlertDialog(
         onDismissRequest = {},
@@ -386,6 +378,14 @@ fun RulesDialog(
                     optionLabel = { if (it == BlackJackRules.THREE_TO_TWO) "3 : 2" else "6 : 5" },
                     onSelected = { blackJackRules = it }
                 )
+
+                RuleDropdown(
+                    label = "Split after split rules",
+                    options = listOf(true, false),
+                    selected = splitAfterSplit,
+                    optionLabel = { if (it) "Allowed" else "Not allowed" },
+                    onSelected = { splitAfterSplit = it }
+                )
             }
         },
         confirmButton = {
@@ -401,7 +401,8 @@ fun RulesDialog(
                             doubleRules,
                             blackJackRules,
                             isNewDeckPerRound,
-                            isDealerShowSecondCardInAmericanRule
+                            isDealerShowSecondCardInAmericanRule,
+                            splitAfterSplit
                         )
                     )
                 }

@@ -61,7 +61,16 @@ public class API {
      * Creates a new API instance with a default rule set
      */
     public API() {
-        this.config = new Config(
+        this.config = defaultConfig();
+        engine = new Engine(this.config);
+        minSizeOfDeck = 52 * this.config.countOfDecks() / 3;
+    }
+
+    /**
+     * Return default config of game
+     * */
+    public static Config defaultConfig(){
+        return new Config(
                 1,
                 DealerStand.HARD_17,
                 Surrender.LATE_SURRENDER,
@@ -70,10 +79,9 @@ public class API {
                 DoubleRules.NINE_TEN_ELEVEN,
                 BlackJackRules.THREE_TO_TWO,
                 true,
-                true
+                true,
+                false
         );
-        engine = new Engine(this.config);
-        minSizeOfDeck = 52 * this.config.countOfDecks() / 3;
     }
 
     /**

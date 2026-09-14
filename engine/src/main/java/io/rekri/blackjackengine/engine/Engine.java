@@ -103,7 +103,8 @@ public class Engine {
     public boolean isSplitAvailable() {
         return !splitWasSkip && playerHand.size() == 2 &&
                 playerHand.get(0).value() == playerHand.get(1).value() &&
-                !isDealerBlackJack();
+                !isDealerBlackJack() &&
+                (config.splitAfterSplit() || !isSplitWas);
     }
 
     public boolean isDealerBlackJack() {

@@ -12,6 +12,7 @@ public record Config (
         @NotNull DoubleRules doubleRules,
         @NotNull BlackJackRules blackJackRules,
         @NotNull Boolean isNewDeckPerRound,
-        @NotNull Boolean isDealerShowSecondCardInAmericanRule
+        @NotNull Boolean isDealerShowSecondCardInAmericanRule,
+        @NotNull Boolean splitAfterSplit
         )
 {}
