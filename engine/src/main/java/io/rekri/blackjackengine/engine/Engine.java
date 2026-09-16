@@ -125,12 +125,13 @@ public class Engine {
         if (config.doubleRules().equals(DoubleRules.ANY))
             return true;
 
-        if (config.isDaS() && isSplitWas)
+        if (!config.isDaS() && isSplitWas)
             return false;
 
-        final var firstCard = playerHand.get(0);
-        final var secondCard = playerHand.get(1);
-        final var sum = firstCard.value().getValue() + secondCard.value().getValue();
+        int sum = 0;
+
+        for (var card : playerHand)
+            sum += card.value().getValue();
 
         return config.doubleRules().equals(DoubleRules.TEN_ELEVEN) && (sum == 10 || sum == 11) ||
                 config.doubleRules().equals(DoubleRules.NINE_TEN_ELEVEN) && (sum == 10 || sum == 11 || sum == 9);
