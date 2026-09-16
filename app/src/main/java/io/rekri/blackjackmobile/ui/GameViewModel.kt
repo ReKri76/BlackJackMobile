@@ -52,7 +52,7 @@ class GameViewModel : ViewModel() {
             stack = 0.0,
             sizeOfDeck = 0,
             isInsuranceOffered = false,
-            isSplitAvailable = engine.isSplitAvailable,
+            isSplitAvailable = false,
             currentBet = 0.0,
             split = 0,
             isAmericanRules = isAmericanRules(),
@@ -81,12 +81,12 @@ class GameViewModel : ViewModel() {
                 stack = 0.0,
                 sizeOfDeck = 0,
                 isInsuranceOffered = false,
-                isSplitAvailable = engine.isSplitAvailable,
+                isSplitAvailable = false,
                 currentBet = 0.0,
                 split = 0,
                 isAmericanRules = isAmericanRules(),
                 isDoubleAvailable = false,
-                isSurrenderAvailable = currentEngine.isSurrenderAvailable
+                isSurrenderAvailable = false
             )
     }
 
